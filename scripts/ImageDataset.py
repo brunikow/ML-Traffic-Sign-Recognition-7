@@ -15,16 +15,17 @@ class ImageDataset(Dataset):
         self.pixelsy = pixelsy
 
         self.samples = []
-        self.lables = []
+        self.labels = []
         self.string_lables = []
         self.vectors = []
 
         # Read csv file and extract lables and vectors
         dataset = []
         df = pd.read_csv(csv_filepath, skiprows=0)
-        labels = df.iloc[:, 0].to_numpy()
-        string_labels = df.iloc[:, 1].to_numpy()
-        vectors = df.iloc[:, 2:].to_numpy()
+        self.labels = df.iloc[:, 0].to_numpy()
+        self.string_labels = df.iloc[:, 1].to_numpy()
+        self.vectors = df.iloc[:, 2:].to_numpy()
+
 
         # Read image samples
         current_folder = 0
@@ -40,15 +41,23 @@ class ImageDataset(Dataset):
                 img = img.resize((pixelsx, pixelsy))
                 img_array = np.array(img)
                 img_array = np.transpose(img_array, (2, 0, 1))
+                self.samples.append(img_array)
 
     def __len__(self):
         return len(self.samples)
         
     def __getitem__(self, idx):
-        image = self.samples[idx].float() / 255.0
-        lable =  self.lables[idx]
+        image = self.samples[idx]
+        label =  self.labels[idx]
+        string_label = self.string_labels[idx]
+        vector = self.vectors[idx]
+
+        return image, label, string_label, vector
 
 
-
-# read_images("../data/raw/GTSRB/Final_Training/Images/", "../data/raw/concepts_per_class.csv", 128, 128)
-#read_csv("../data/raw/concepts_per_class.csv")
+if __name__ == "__main__":
+    folderpath = "../data/raw/GTSRB/Final_Training/Images/"
+    filepath = "../data/raw/concepts_per_class.csv"
+    dataset = ImageDataset(folderpath, filepath, 128, 128)
+    print("dataset created")
+    print(dataset.__getitem__(1))
