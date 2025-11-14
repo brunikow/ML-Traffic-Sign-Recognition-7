@@ -7,10 +7,25 @@ from torch.utils.data import Dataset
 
 
 class ImageDataset(Dataset):
-    
-    def __init__(self, image_folderpath: str, csv_filepath: str, pixelsx: int, pixelsy: int):
-        self.image_folderpath = image_folderpath
-        self.csv_filepath = csv_filepath
+    """
+    A class used to create and manage a dataset out of given data.
+    """
+
+
+    def __init__(self, image_path: str, csv_path: str, pixelsx: int, pixelsy: int) -> None:
+        """
+        Initializes a dataset out of given data by.
+
+        1. reading a csv file with lables and vectors.
+        2. going through the data, which is structured in a folder structure.
+
+        @param image_path: path to the directory which contains all directories that store images.
+        @param csv_path: path to the csv-file that contains the labels with vectors.
+        @param pixelsx: contains the uniform pixel number all images will get in x axis.
+        @param pixelsy: contains the uniform pixel number all images will get in y axis.
+        """
+        self.image_folderpath = image_path
+        self.csv_filepath = csv_path
         self. pixelsx = pixelsx
         self.pixelsy = pixelsy
 
@@ -21,7 +36,7 @@ class ImageDataset(Dataset):
 
         # Read csv file and extract lables and vectors
         dataset = []
-        df = pd.read_csv(csv_filepath, skiprows=0)
+        df = pd.read_csv(csv_path, skiprows=0)
         self.labels = df.iloc[:, 0].to_numpy()
         self.string_labels = df.iloc[:, 1].to_numpy()
         self.vectors = df.iloc[:, 2:].to_numpy()
@@ -31,7 +46,7 @@ class ImageDataset(Dataset):
         current_folder = 0
 
         for current_folder in range(42):
-            folder_loc = os.path.join(image_folderpath, f"{current_folder:05d}")
+            folder_loc = os.path.join(image_path, f"{current_folder:05d}")
             paths = sorted(glob.glob(os.path.join(folder_loc, "*.ppm")))
 
             for p in paths:
@@ -43,10 +58,20 @@ class ImageDataset(Dataset):
                 img_array = np.transpose(img_array, (2, 0, 1))
                 self.samples.append(img_array)
 
-    def __len__(self):
+
+    def __len__(self) -> int:
+        """
+        Returns the number of samples in the dataset.
+        """
         return len(self.samples)
-        
-    def __getitem__(self, idx):
+
+
+    def __getitem__(self, idx) -> tuple[np.ndarray, int, str, np.ndarray]:
+        """
+        Returns image, label, string_label and vecor of the dataset at given index.
+
+        @param idx: index of the sample
+        """
         image = self.samples[idx]
         label =  self.labels[idx]
         string_label = self.string_labels[idx]
@@ -55,7 +80,12 @@ class ImageDataset(Dataset):
         return image, label, string_label, vector
 
 
+
 if __name__ == "__main__":
+    """
+    Test script that gets only executed when this script is executed. Not during imports.
+    """
+
     folderpath = "../data/raw/GTSRB/Final_Training/Images/"
     filepath = "../data/raw/concepts_per_class.csv"
     dataset = ImageDataset(folderpath, filepath, 128, 128)
