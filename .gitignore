@@ -212,6 +212,7 @@ data/raw/*
 data/processed/*
 data/splits/*
 !data/*.csv
+data/GTSRB/*
 
 #.idea
 .idea/

@@ -58,7 +58,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, idx) -> tuple[np.ndarray, int, str, np.ndarray]:
         """
-        Returns image, label, string_label and vecor of the dataset at given index.
+        Returns image, label, string_label and vector of the dataset at given index.
 
         @param idx: index of the sample
         """
@@ -68,3 +68,14 @@ class ImageDataset(Dataset):
         vector = self.vectors[idx]
 
         return image, label, string_label, vector
+
+if __name__ == "__main__":
+    """
+    Test script that gets only executed when this script is executed. Not during imports.
+    """
+
+    folderpath = "../data/GTSRB/Final_Training/Images/"
+
+    filepath = "../data/concepts_per_class.csv"
+
+    dataset = ImageDataset(folderpath, filepath, 128, 128)

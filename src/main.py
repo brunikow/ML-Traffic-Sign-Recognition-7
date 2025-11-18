@@ -2,8 +2,8 @@ from Data import ImageDataset
 from torch.utils.data import DataLoader
 
 def main():
-    folderpath = "../data/raw/Final_Training/Images/"
-    filepath = "../data/raw/concepts_per_class.csv"
+    folderpath = "../data/GTSRB/Final_Training/Images/"
+    filepath = "../data/concepts_per_class.csv"
 
     dataset = ImageDataset(folderpath, filepath, 128, 128)
     custom_loader = DataLoader(dataset, batch_size=32, shuffle=True)
