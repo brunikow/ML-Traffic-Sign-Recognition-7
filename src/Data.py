@@ -3,6 +3,7 @@ from PIL import Image
 import glob
 import os
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
 
 class ImageDataset(Dataset):
@@ -31,14 +32,13 @@ class ImageDataset(Dataset):
         self.string_lables = []
         self.vectors = []
 
-        # Read csv file and extract lables and vectors
+        # Read csv file and extract names and vectors
         df = pd.read_csv(csv_path, skiprows=0)
-        self.labels = df.iloc[:, 0].to_numpy()
         self.string_labels = df.iloc[:, 1].to_numpy()
         self.vectors = df.iloc[:, 2:].to_numpy()
-        
-        for current_folder in range(43):
-            folder_loc = os.path.join(image_path, f"{current_folder:05d}")
+
+        for current_label in range(43):
+            folder_loc = os.path.join(image_path, f"{current_label:05d}")
             paths = glob.glob(os.path.join(folder_loc, "*.ppm"))
 
             for p in paths:
@@ -46,7 +46,10 @@ class ImageDataset(Dataset):
                 img = img.resize((pixelsx, pixelsy))
                 img_array = np.array(img)
                 img_array = np.transpose(img_array, (2, 0, 1))
-                self.samples.append(img_array)                  
+
+                self.samples.append(img_array)
+                self.labels.append(current_label)
+
 
 
     def __len__(self) -> int:
@@ -56,22 +59,36 @@ class ImageDataset(Dataset):
         return len(self.samples)
 
 
-    def __getitem__(self, idx) -> tuple[np.ndarray, int, str, np.ndarray]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """
         Returns image, label, string_label and vector of the dataset at given index.
 
         @param idx: index of the sample
         """
-        image = self.samples[idx]
+        sample = self.samples[idx]
         label =  self.labels[idx]
-        string_label = self.string_labels[idx]
-        vector = self.vectors[idx]
+        vector = self.vectors[label]
 
-        return image, label, string_label, vector
+        # Transform everything to tensors (needed for ML usage)
+        sample = torch.tensor(sample, dtype=torch.float32) / 255.0      # normalize the value
+        label = torch.tensor(label, dtype=torch.long)
+        vector = torch.tensor(vector, dtype=torch.float32)
+
+        return sample, (vector, label)
+
+
+    def __getname__(self, label:int) -> str:
+        """
+        Returns a descriptive name for a given label.
+
+        @param label: label you want the name for.
+        """
+        return self.string_labels[label]
+
 
 if __name__ == "__main__":
     """
-    Test script that gets only executed when this script is executed. Not during imports.
+    Test script that is only executed when this script is executed. Not during imports.
     """
 
     folderpath = "../data/GTSRB/Final_Training/Images/"
@@ -79,3 +96,9 @@ if __name__ == "__main__":
     filepath = "../data/concepts_per_class.csv"
 
     dataset = ImageDataset(folderpath, filepath, 128, 128)
+
+
+"""
+problems I want to solve:
+
+"""
