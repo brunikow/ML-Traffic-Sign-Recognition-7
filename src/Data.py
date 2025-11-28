@@ -97,6 +97,8 @@ if __name__ == "__main__":
 
     dataset = ImageDataset(folderpath, filepath, 128, 128)
 
+    sample = dataset.__getitem__(65)
+    print(sample[0])
 
 """
 problems I want to solve:
