@@ -54,8 +54,8 @@ class Trainer:
                 epoch_loss = total_loss / len(train_loader)
                 print(f"  Epoch {epoch + 1} Summary: Loss = {epoch_loss:.4f}")
             
-                print(f"\nTraining completed!")
-                return model       
+            print(f"\nTraining completed!")
+            return model       
 
 if __name__ == "__main__":
     # set up device
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
-                             batch_size=128,
+                             batch_size=32,
                              train_portion=0.8)
 
     train_loader = loader.get_train_loader()
