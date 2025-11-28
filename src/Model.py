@@ -7,11 +7,8 @@ class Model_CNN(torch.nn.Module):
         super(Model_CNN, self).__init__()
         self.num_classes = num_classes
 
-        # stores weights
-        weights = EfficientNet_V2_S_Weights
-
         # pretrained network
-        self.backbone = efficientnet_v2_s(weights=weights)
+        self.backbone = efficientnet_v2_s(weights=EfficientNet_V2_S_Weights.IMAGENET1K_V1)
 
         
         # output of the last layer

@@ -4,7 +4,8 @@ import torch.optim as optim
 from Data import ImageDataset
 from Model import Model_CNN
 from DataLoader import ImageDataLoader
-
+import copy
+import time
 
 class Trainer:
     def __init__(self, device, model, train_loader, val_loader):
@@ -12,21 +13,27 @@ class Trainer:
         self.model = model.to(device)
         self.train_loader = train_loader
         self.val_loader = val_loader
-        self.criterion = nn.MSELoss()
-        self.optimizer = optim.Adam(model.parameters(), lr = 0.001)
+        self.criterion = nn.BCEWithLogitsLoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.5)
 
     def simple_training(self, num_epochs):
+            start = time.time()
+
+            best_model_wts = copy.deepcopy(model.state_dict())
+            best_val_loss = float('inf')
+            epochs_no_improve = 0
+
             for epoch in range(num_epochs):
                 print(f"\nEpoch {epoch + 1}/{num_epochs}")
 
                 # Training phase
-                model.train()
+                self.model.train()
                 total_loss = 0.0
                 correct_predictions = 0
                 total_samples = 0
 
                 print("TRAINING")
-                for batch_idx, (data, (vector, label)) in enumerate(train_loader):
+                for batch_idx, (data, (vector, label)) in enumerate(self.train_loader):
                     # Move data to device
                     data = data.to(device)
                     vector = vector.to(device)
@@ -35,7 +42,7 @@ class Trainer:
                     self.optimizer.zero_grad()
                     
                     # Forward pass: compute predictions
-                    outputs = model(data)
+                    outputs = self.model(data)
                     
                     # Compute loss
                     loss = self.criterion(outputs, vector)
@@ -48,54 +55,75 @@ class Trainer:
                     
                     # Track statistics
                     total_loss += loss.item()
-                    
+
+                    predicted = (torch.sigmoid(outputs) > 0.5).float()
+                    correct_predictions += (predicted == vector).sum().item()
+                    total_samples += vector.numel() 
+
                     # Print progress
                     if batch_idx % 100 == 0:
-                        current_loss = total_loss / (batch_idx + 1)
-                        print(f"Training Batch {batch_idx:3d}: Loss = {current_loss:.4f}")
-                                # Validation phase
-                model.eval()
+                       current_loss = total_loss / (batch_idx + 1)
+                       train_acc = 100. * correct_predictions / total_samples
+                       print(f"Training Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.2f}%")
+
+                # Validation phase
+                self.model.eval()
                 val_loss = 0.0
-                val_corect = 0
+                val_correct = 0
                 val_total = 0
 
                 print("VALIDATION")
                 with torch.no_grad():
-                     for batch_idx (data, (vector, label)) in enumerate(self.val_loader):
-                          data = data.to(self.device)
-                          vector = vector.to(self.device)
-                          output = model(data)
-                          loss = self.criterion(output, vector)
+                     for batch_idx, (data, (vector, label)) in enumerate(self.val_loader):
+                        data = data.to(self.device)
+                        vector = vector.to(self.device)
+                        output = self.model(data)
+                        loss = self.criterion(output, vector)
 
-                          val_loss += loss.item()
+                        val_loss += loss.item()
+                        
+                        predicted = (torch.sigmoid(output) > 0.5).float()
+                        val_correct += (predicted == vector).sum().item()
+                        val_total += vector.numel()
 
-                          if batch_idx % 100 == 0:
-                            current_loss = total_loss / (batch_idx + 1)
-                            print(f"Validation: Batch {batch_idx:3d}: Loss = {current_loss:.4f}")
+                        if batch_idx % 100 == 0:
+                            current_loss = val_loss / (batch_idx + 1)
+                            val_acc = 100. * val_correct / val_total
+                            print(f"Validation: Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Validation Acc: {val_acc:.2f}%")
                      
                 # Calculate epoch statistics
                 epoch_loss = total_loss / len(train_loader)
-                print(f"  Epoch {epoch + 1} Summary: Loss = {epoch_loss:.4f}")
-
-       
-      
-
-
+                train_acc = 100. * correct_predictions / total_samples
+                print(f"  Epoch {epoch + 1} Summary: Loss = {epoch_loss:.4f} | Acc: {train_acc:.2f}%")
+                
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    best_model_wts = copy.deepcopy(model.state_dict())
+                    epochs_no_improve = 0
+                else:
+                    epochs_no_improve += 1
+                    if epochs_no_improve >= patience:
+                        print("stopped early didnt improve in a bit")
+                        break
             
-            print(f"\nTraining completed!")
-            return model       
+            self.model.load_state_dict(best_model_wts)
+
+            stop = time.time()
+            total_time = stop-start
+            print(f"\nTraining completed! time passed: {total_time}")
+
+            return self.model
 
 if __name__ == "__main__":
     # set up device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    image_path = "../data/GTSRB/Final_Training/Images/"
+    image_path = "../data/raw/Final_Training/Images/"
     csv_path = "../data/concepts_per_class.csv"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
                              batch_size=32,
                              train_portion=0.8)
-
     train_loader = loader.get_train_loader()
     val_loader = loader.get_val_loader()
     model = Model_CNN(43)

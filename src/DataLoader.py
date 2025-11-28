@@ -25,7 +25,7 @@ class ImageDataLoader:
 
     
     def get_val_loader(self):
-        val_loader = DataLoader(self.train_dataset, 
+        val_loader = DataLoader(self.val_dataset, 
                                   batch_size=self.batch_size, 
                                   shuffle=False, 
                                   num_workers=4)
