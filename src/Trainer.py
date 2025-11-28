@@ -18,11 +18,14 @@ class Trainer:
     def simple_training(self, num_epochs):
             for epoch in range(num_epochs):
                 print(f"\nEpoch {epoch + 1}/{num_epochs}")
+
+                # Training phase
                 model.train()
                 total_loss = 0.0
                 correct_predictions = 0
                 total_samples = 0
 
+                print("TRAINING")
                 for batch_idx, (data, (vector, label)) in enumerate(train_loader):
                     # Move data to device
                     data = data.to(device)
@@ -47,12 +50,37 @@ class Trainer:
                     total_loss += loss.item()
                     
                     # Print progress
-                    current_loss = total_loss / (batch_idx + 1)
-                    print(f"  Batch {batch_idx:3d}: Loss = {current_loss:.4f}")
-                
+                    if batch_idx % 100 == 0:
+                        current_loss = total_loss / (batch_idx + 1)
+                        print(f"Training Batch {batch_idx:3d}: Loss = {current_loss:.4f}")
+                                # Validation phase
+                model.eval()
+                val_loss = 0.0
+                val_corect = 0
+                val_total = 0
+
+                print("VALIDATION")
+                with torch.no_grad():
+                     for batch_idx (data, (vector, label)) in enumerate(self.val_loader):
+                          data = data.to(self.device)
+                          vector = vector.to(self.device)
+                          output = model(data)
+                          loss = self.criterion(output, vector)
+
+                          val_loss += loss.item()
+
+                          if batch_idx % 100 == 0:
+                            current_loss = total_loss / (batch_idx + 1)
+                            print(f"Validation: Batch {batch_idx:3d}: Loss = {current_loss:.4f}")
+                     
                 # Calculate epoch statistics
                 epoch_loss = total_loss / len(train_loader)
                 print(f"  Epoch {epoch + 1} Summary: Loss = {epoch_loss:.4f}")
+
+       
+      
+
+
             
             print(f"\nTraining completed!")
             return model       
