@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
+from torchvision.models import EfficientNet_V2_S_Weights
 
 class ImageDataset(Dataset):
     """
@@ -27,9 +28,10 @@ class ImageDataset(Dataset):
         self. pixelsx = pixelsx
         self.pixelsy = pixelsy
 
-        self.samples = []
+        #self.samples = []
+        self.sample_paths = []
         self.labels = []
-        self.string_lables = []
+        self.string_labels = []
         self.vectors = []
 
         # Read csv file and extract names and vectors
@@ -39,24 +41,33 @@ class ImageDataset(Dataset):
 
         for current_label in range(43):
             folder_loc = os.path.join(image_path, f"{current_label:05d}")
-            paths = glob.glob(os.path.join(folder_loc, "*.ppm"))
 
+            paths = glob.glob(os.path.join(folder_loc, "*.ppm"))
             for p in paths:
+                """
+                Maybe redundant because of self.transform = weights.transforms() and the logic in getitem
+
                 img = Image.open(p).convert("RGB")
                 img = img.resize((pixelsx, pixelsy))
                 img_array = np.array(img)
                 img_array = np.transpose(img_array, (2, 0, 1))
 
                 self.samples.append(img_array)
+                """
+
+                self.sample_paths.append(p)
                 self.labels.append(current_label)
 
+        # preparation for efficientNet
+        weights = EfficientNet_V2_S_Weights.IMAGENET1K_V1
+        self.transform = weights.transforms()
 
 
     def __len__(self) -> int:
         """
         Returns the number of samples in the dataset.
         """
-        return len(self.samples)
+        return len(self.sample_paths)
 
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
@@ -65,16 +76,20 @@ class ImageDataset(Dataset):
 
         @param idx: index of the sample
         """
-        sample = self.samples[idx]
+        path = self.sample_paths[idx]
+        img = Image.open(path).convert("RGB")
+        img = self.transform(img)
+
+        # sample = self.samples[idx]
         label =  self.labels[idx]
         vector = self.vectors[label]
 
         # Transform everything to tensors (needed for ML usage)
-        sample = torch.tensor(sample, dtype=torch.float32) / 255.0      # normalize the value
+        # sample = torch.tensor(sample, dtype=torch.float32)
         label = torch.tensor(label, dtype=torch.long)
         vector = torch.tensor(vector, dtype=torch.float32)
 
-        return sample, (vector, label)
+        return img, (vector, label)
 
 
     def __getname__(self, label:int) -> str:

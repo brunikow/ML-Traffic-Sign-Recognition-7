@@ -14,12 +14,12 @@ class Trainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.criterion = nn.BCEWithLogitsLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.5)
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.001)
 
-    def simple_training(self, num_epochs):
+    def simple_training(self, num_epochs, patience):
             start = time.time()
 
-            best_model_wts = copy.deepcopy(model.state_dict())
+            best_model_wts = copy.deepcopy(self.model.state_dict())
             best_val_loss = float('inf')
             epochs_no_improve = 0
 
@@ -35,8 +35,8 @@ class Trainer:
                 print("TRAINING")
                 for batch_idx, (data, (vector, label)) in enumerate(self.train_loader):
                     # Move data to device
-                    data = data.to(device)
-                    vector = vector.to(device)
+                    data = data.to(self.device)
+                    vector = vector.to(self.device)
 
                     # Zero the gradients (important!)
                     self.optimizer.zero_grad()
@@ -92,13 +92,13 @@ class Trainer:
                             print(f"Validation: Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Validation Acc: {val_acc:.2f}%")
                      
                 # Calculate epoch statistics
-                epoch_loss = total_loss / len(train_loader)
+                epoch_loss = total_loss / len(self.train_loader)
                 train_acc = 100. * correct_predictions / total_samples
                 print(f"  Epoch {epoch + 1} Summary: Loss = {epoch_loss:.4f} | Acc: {train_acc:.2f}%")
                 
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
-                    best_model_wts = copy.deepcopy(model.state_dict())
+                    best_model_wts = copy.deepcopy(self.model.state_dict())
                     epochs_no_improve = 0
                 else:
                     epochs_no_improve += 1
@@ -117,7 +117,7 @@ class Trainer:
 if __name__ == "__main__":
     # set up device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    image_path = "../data/raw/Final_Training/Images/"
+    image_path = "../data/GTSRB/Final_Training/Images/"
     csv_path = "../data/concepts_per_class.csv"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
@@ -128,5 +128,5 @@ if __name__ == "__main__":
     val_loader = loader.get_val_loader()
     model = Model_CNN(43)
     trainer = Trainer(device, model, train_loader, val_loader)
-    trainer.simple_training(8)
+    trainer.simple_training(8, 3)
 

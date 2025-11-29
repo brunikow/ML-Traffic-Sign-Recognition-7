@@ -21,7 +21,6 @@ class Model_CNN(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         features = self.backbone(x)
         logits = self.classifier(features)
-        probability = torch.sigmoid(logits)
-        return probability
+        return logits
 
 
