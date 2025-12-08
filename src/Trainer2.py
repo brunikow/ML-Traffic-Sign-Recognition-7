@@ -15,7 +15,7 @@ class Trainer2:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.0001)
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.0005)
 
         # load cnn_model
         cnn_model = Model_CNN(43)
@@ -47,7 +47,7 @@ class Trainer2:
 
                 with torch.no_grad():
                     c_vectors = self.cnn_model(data)
-                    c_vectors = torch.sigmoid(c_vectors)
+                    # c_vectors = torch.sigmoid(c_vectors)
                     c_vectors = c_vectors.to(self.device)
 
 
@@ -87,7 +87,7 @@ class Trainer2:
                     label = label.to(self.device)
                     
                     c_vectors = self.cnn_model(data)
-                    c_vectors = torch.sigmoid(c_vectors)
+                    #c_vectors = torch.sigmoid(c_vectors)
                     c_vectors = c_vectors.to(self.device)
 
                     output = self.model(c_vectors)
@@ -96,22 +96,23 @@ class Trainer2:
 
                     predicted = (torch.argmax(output, dim=1))
                     val_correct += (predicted == label).sum().item()
-                    total_samples += label.size(0)
+                    val_total += label.size(0)
 
                     # Print progress
                     if batch_idx % 100 == 0:
-                        current_loss = total_loss / (batch_idx + 1)
-                        train_acc = 100. * correct_predictions / total_samples
-                        print(f"Validation Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.2f}%")
+                        current_loss = val_loss / (batch_idx + 1)
+                        val_acc = 100. * val_correct / val_total
+                        print(f"Validation Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {val_acc:.2f}%")
 
 
 
             # Calculate epoch statistics
-            epoch_loss = total_loss / len(self.train_loader)
-            train_acc = 100. * correct_predictions / total_samples
-            print(f"  Epoch {epoch + 1} Summary: Loss = {epoch_loss:.4f} | Acc: {train_acc:.2f}%")
+            val_epoch_loss = val_loss / len(self.val_loader)
+            val_epoch_acc = 100. * val_correct / val_total
+            print(f"  Epoch {epoch + 1} Summary: Loss = {val_epoch_loss:.4f} | Acc: {val_epoch_acc:.2f}%")
             
             """
+            Early stopping
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 best_model_wts = copy.deepcopy(self.model.state_dict())
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../data/GTSRB/Final_Training/Images/"
     csv_path = "../data/concepts_per_class.csv"
-    destination_path = "../models/cnn/model1.pth"
+    destination_path = "../models/cnn/model1_8e.pth"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
