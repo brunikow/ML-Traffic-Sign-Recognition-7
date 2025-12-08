@@ -15,7 +15,7 @@ class Trainer2:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.0005)
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.001)
 
         # load cnn_model
         cnn_model = Model_CNN(43)
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../data/GTSRB/Final_Training/Images/"
     csv_path = "../data/concepts_per_class.csv"
-    destination_path = "../models/cnn/model1_8e.pth"
+    destination_path = "../models/cnn/model1_14_5e.pth"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
@@ -147,6 +147,6 @@ if __name__ == "__main__":
     model = Model(43, 43)
     model.to(device)
     trainer = Trainer2(device, model, destination_path, train_loader, val_loader)
-    trained_model = trainer.simple_training(8, 3)
+    trained_model = trainer.simple_training(8, 5)
 
 

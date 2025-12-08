@@ -14,7 +14,7 @@ class Trainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.criterion = nn.BCEWithLogitsLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.0005)
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.0001)
 
     def simple_training(self, num_epochs, patience):
             start = time.time()
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../data/GTSRB/Final_Training/Images/"
     csv_path = "../data/concepts_per_class.csv"
-    destination_path = "../models/cnn/model1_8e.pth"
+    destination_path = "../models/cnn/model1.pth"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
@@ -146,6 +146,6 @@ if __name__ == "__main__":
     val_loader = loader.get_val_loader()
     model = Model_CNN(43)
     trainer = Trainer(device, model, train_loader, val_loader)
-    trained_model = trainer.simple_training(8, 3)
+    trained_model = trainer.simple_training(14, 5)
     torch.save(trained_model.state_dict(), destination_path)
 
