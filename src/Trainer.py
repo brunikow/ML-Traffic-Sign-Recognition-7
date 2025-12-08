@@ -116,9 +116,10 @@ class Trainer:
 
 if __name__ == "__main__":
     # set up device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../data/GTSRB/Final_Training/Images/"
     csv_path = "../data/concepts_per_class.csv"
+    destination_path = "../models/cnn/model1.pth"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
@@ -128,5 +129,6 @@ if __name__ == "__main__":
     val_loader = loader.get_val_loader()
     model = Model_CNN(43)
     trainer = Trainer(device, model, train_loader, val_loader)
-    trainer.simple_training(8, 3)
+    trained_model = trainer.simple_training(2, 3)
+    torch.save(trained_model.state_dict(), destination_path)
 
