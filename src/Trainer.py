@@ -148,4 +148,12 @@ if __name__ == "__main__":
     trainer = Trainer(device, model, train_loader, val_loader)
     trained_model = trainer.simple_training(14, 5)
     torch.save(trained_model.state_dict(), destination_path)
+    
 
+"""
+TODO
+
+- per concept accuracy [1, 2, 3, 4, ... , 43]
+- visualization
+
+"""

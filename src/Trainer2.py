@@ -33,78 +33,9 @@ class Trainer2:
 
         for epoch in range (num_epochs):
             print(f"\nEpoch {epoch + 1}/{num_epochs}")
-            
-            # Trainig phase
-            self.model.train()
-            total_loss = 0.0
-            correct_predictions = 0
-            total_samples = 0
 
-            print("TRAINING")
-            for batch_idx, (data, (_, label)) in enumerate(self.train_loader):
-                data = data.to(self.device)
-                label = label.to(self.device)
-
-                with torch.no_grad():
-                    c_vectors = self.cnn_model(data)
-                    # c_vectors = torch.sigmoid(c_vectors)
-                    c_vectors = c_vectors.to(self.device)
-
-
-                self.optimizer.zero_grad()
-
-                outputs = self.model(c_vectors)
-
-                loss = self.criterion(outputs, label)
-
-                loss.backward()
-                
-                self.optimizer.step()
-
-                total_loss += loss.item()
-
-                
-                predicted = torch.argmax(outputs, dim=1)
-                correct_predictions += (predicted == label).sum().item()
-                total_samples += label.size(0) 
-
-                # Print progress
-                if batch_idx % 100 == 0:
-                    current_loss = total_loss / (batch_idx + 1)
-                    train_acc = 100. * correct_predictions / total_samples
-                    print(f"Training Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.2f}%")
-
-            # Validation phase
-            self.model.eval()
-            val_loss = 0.0
-            val_correct = 0
-            val_total = 0
-
-            print("VALIDATION")
-            with torch.no_grad():
-                for batch_idx, (data, (_, label)) in enumerate(self.val_loader):
-                    data = data.to(self.device)
-                    label = label.to(self.device)
-                    
-                    c_vectors = self.cnn_model(data)
-                    #c_vectors = torch.sigmoid(c_vectors)
-                    c_vectors = c_vectors.to(self.device)
-
-                    output = self.model(c_vectors)
-                    loss = self.criterion(output, label)
-                    val_loss += loss.item()
-
-                    predicted = (torch.argmax(output, dim=1))
-                    val_correct += (predicted == label).sum().item()
-                    val_total += label.size(0)
-
-                    # Print progress
-                    if batch_idx % 100 == 0:
-                        current_loss = val_loss / (batch_idx + 1)
-                        val_acc = 100. * val_correct / val_total
-                        print(f"Validation Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {val_acc:.2f}%")
-
-
+            self.train()
+            val_loss, val_loader, val_correct, val_total = self.validate()
 
             # Calculate epoch statistics
             val_epoch_loss = val_loss / len(self.val_loader)
@@ -130,6 +61,85 @@ class Trainer2:
         print(f"\nTraining completed! time passed: {total_time}")
 
         return self.model
+    
+
+    def train(self):
+        # Trainig phase
+        self.model.train()
+        total_loss = 0.0
+        correct_predictions = 0
+        total_samples = 0
+
+        print("TRAINING")
+        for batch_idx, (data, (_, label)) in enumerate(self.train_loader):
+            data = data.to(self.device)
+            label = label.to(self.device)
+
+            with torch.no_grad():
+                c_vectors = self.cnn_model(data)
+                # c_vectors = torch.sigmoid(c_vectors)
+                c_vectors = c_vectors.to(self.device)
+
+
+            self.optimizer.zero_grad()
+
+            outputs = self.model(c_vectors)
+
+            loss = self.criterion(outputs, label)
+
+            loss.backward()
+            
+            self.optimizer.step()
+
+            total_loss += loss.item()
+
+            
+            predicted = torch.argmax(outputs, dim=1)
+            correct_predictions += (predicted == label).sum().item()
+            total_samples += label.size(0) 
+
+            # Print progress
+            if batch_idx % 100 == 0:
+                current_loss = total_loss / (batch_idx + 1)
+                train_acc = 100. * correct_predictions / total_samples
+                print(f"Training Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.2f}%")
+
+        return
+
+
+    def validate(self):
+        # Validation phase
+        self.model.eval()
+        val_loss = 0.0
+        val_correct = 0
+        val_total = 0
+
+        print("VALIDATION")
+        with torch.no_grad():
+            for batch_idx, (data, (_, label)) in enumerate(self.val_loader):
+                data = data.to(self.device)
+                label = label.to(self.device)
+                
+                c_vectors = self.cnn_model(data)
+                #c_vectors = torch.sigmoid(c_vectors)
+                c_vectors = c_vectors.to(self.device)
+
+                output = self.model(c_vectors)
+                loss = self.criterion(output, label)
+                val_loss += loss.item()
+
+                predicted = (torch.argmax(output, dim=1))
+                val_correct += (predicted == label).sum().item()
+                val_total += label.size(0)
+
+                # Print progress
+                if batch_idx % 100 == 0:
+                    current_loss = val_loss / (batch_idx + 1)
+                    val_acc = 100. * val_correct / val_total
+                    print(f"Validation Batch {batch_idx:3d}: Loss = {current_loss:.4f} | Acc: {val_acc:.2f}%")
+
+        return val_loss, val_loader, val_correct, val_total
+
 
 if __name__ == "__main__":
     # set up device
@@ -147,6 +157,6 @@ if __name__ == "__main__":
     model = Model(43, 43)
     model.to(device)
     trainer = Trainer2(device, model, destination_path, train_loader, val_loader)
-    trained_model = trainer.simple_training(8, 5)
+    trained_model = trainer.simple_training(1, 5)
 
 
