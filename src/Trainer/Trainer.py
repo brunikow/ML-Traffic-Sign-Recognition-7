@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from Data import ImageDataset
-from Model import Model_CNN
-from DataLoader import ImageDataLoader
+from Data.Data import ImageDataset
+from Models.Model import Model_CNN
+from Data.DataLoader import ImageDataLoader
 import copy
 import time
 

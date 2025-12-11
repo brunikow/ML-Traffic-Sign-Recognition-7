@@ -3,13 +3,15 @@ import torch.nn as nn
 import torch.optim as optim
 import copy
 import time
+import sys
 
-from CBMModel import CBMModel
-from Data import ImageDataset
-from DataLoader import ImageDataLoader
-from CBMModel import CBMModel
-from Model import Model_CNN
-from Model2 import Model
+sys.path.append("..")
+
+from Data.Data import ImageDataset
+from Data.DataLoader import ImageDataLoader
+from Models.CBMModel import CBMModel
+from Models.Model import Model_CNN
+from Models.Model2 import Model
 
 class CBMTrainer:
     def __init__(self, device, model, train_loader, val_loader):
@@ -34,7 +36,7 @@ class CBMTrainer:
     
 
     def unfreeze(self, model):
-       for param in model.parameters():
+        for param in model.parameters():
             param.requires_grad = True 
 
     
@@ -152,9 +154,9 @@ class CBMTrainer:
 
 if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-    image_path = "../data/GTSRB/Final_Training/Images/"
-    csv_path = "../data/concepts_per_class.csv"
-    destination_path = "../models/cnn/model1.pth"
+    image_path = "../../data/GTSRB/Final_Training/Images/"
+    csv_path = "../../data/concepts_per_class.csv"
+    destination_path = "../../models/cnn/model1.pth"
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,

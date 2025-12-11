@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader, random_split
-from Data import ImageDataset
+from Data.Data import ImageDataset
 
 class ImageDataLoader:
     def __init__(self, image_path, csv_path, pixelsx, pixelsy, batch_size, train_portion):
