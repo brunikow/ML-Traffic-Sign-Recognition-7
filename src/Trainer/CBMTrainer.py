@@ -12,6 +12,7 @@ from Data.DataLoader import ImageDataLoader
 from Models.CBMModel import CBMModel
 from Models.Model import Model_CNN
 from Models.Model2 import Model
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 class CBMTrainer:
     def __init__(self, device, model, train_loader, val_loader):
@@ -80,9 +81,12 @@ class CBMTrainer:
     def training(self, phase):
         print("Training")
         self.model.train()
+
         total_loss = 0.0
-        correct_predictions = 0
         total_samples = 0
+        correct_predictions = 0
+        concept_correct = 0
+        concept_total = 0
 
         for batch_id, (data, (vector, label)) in enumerate(self.train_loader):
             data = data.to(self.device)
@@ -99,11 +103,21 @@ class CBMTrainer:
             loss.backward()
             self.optimizer[phase].step()
 
+            #accuracy calculation
             total_loss += loss.item()
 
             if (phase == 0):
                 predicted = (torch.sigmoid(output) > 0.5).float()
-                total_samples += target.numel()
+
+                #per vector accuracy
+                batch_size = target.size(0)
+                vector_pred_correct = (predicted == target).all(dim=1).sum().item()
+                correct_predictions += vector_pred_correct
+                total_samples += batch_size
+                
+                #per concept accuracy
+                concept_correct += (predicted == target).sum().item()
+                concept_total += target.numel()
             else:
                 predicted = torch.argmax(output, dim=1)
                 total_samples += target.size(0)
@@ -113,11 +127,15 @@ class CBMTrainer:
             # Print progress
             if batch_id % 100 == 0:
                 current_loss = total_loss / (batch_id + 1)
-                train_acc = 100. * correct_predictions / total_samples
-                print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.2f}%")
+                if phase == 0:
+                    vector_acc = 100. * correct_predictions / total_samples if total_samples > 0 else 0
+                    concept_acc = 100. * concept_correct / concept_total if concept_total > 0 else 0
+                    print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Vector Acc: {vector_acc:.4f}% | Per-Concept Acc: {concept_acc:.4f}")
+                else:
+                    train_acc = 100. * correct_predictions / total_samples
+                    print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.4f}%")
         return
-            
-
+    
     def validation(self, phase):
         print("VALIDATE")
         self.model.eval()
@@ -152,6 +170,10 @@ class CBMTrainer:
                     print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.2f}%")
         return
 
+    def caculate_concept_metrics():
+
+        return
+    
 if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../../data/GTSRB/Final_Training/Images/"
