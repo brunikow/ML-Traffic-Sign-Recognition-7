@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
 import copy
 import time
 import sys
@@ -15,7 +16,7 @@ from Models.Model2 import Model
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 class CBMTrainer:
-    def __init__(self, device, model, train_loader, val_loader, patience = 5):
+    def __init__(self, device, model, train_loader, val_loader, patience = 3):
         self.device = device
         self.model = model
         
@@ -30,18 +31,9 @@ class CBMTrainer:
             optim.Adam(self.model.concept.parameters(), lr=0.0005)
         ]
 
-        #early stopping and history metrics
+        #early stopping
 
         self.patience = patience
-
-        self.best_value_loss = float('inf')
-        self.current_patience = 0
-
-        self.history = {
-            "train_loss" : [],
-            "per-concept train_acc" : [],
-            "val_loss" : [],
-            "per-concept val_acc" : []}
 
 
     def freeze(self, model):
@@ -65,13 +57,29 @@ class CBMTrainer:
     
     def concept_training(self, num_epochs):
         self.freeze(self.model.concept)
+        
+        best_value_loss = float('inf')
+        epochs_no_improv = 0
 
         for epoch in range(num_epochs):
             print(f"\n Epoch {epoch + 1}/{num_epochs}")
 
             self.training(0)
-            self.validation(0)
+            avg_val_loss = self.validation(0)
             ##IMPORTANT EARLY STOPPING FUNCTION
+
+            if avg_val_loss < best_value_loss:
+                best_value_loss = avg_val_loss
+                epochs_no_improv = 0
+                ##TODO: save model
+            else:
+                epochs_no_improv += 1
+            
+            if epochs_no_improv >= self.patience:
+                print(f"Early stopping {epoch+1}")
+                return
+
+
             # Calculate epoch statistics TODO
 
         self.unfreeze(self.model.concept)
@@ -151,6 +159,7 @@ class CBMTrainer:
 
         total_loss = 0.0
         total_samples, vector_correct, concept_correct, concept_total, class_correct = 0,0,0,0,0
+        all_predictions, all_targets = [], []
 
         with torch.no_grad():
             for batch_id, (data, (vector, label)) in enumerate(self.val_loader):
@@ -181,8 +190,9 @@ class CBMTrainer:
                     predicted = torch.argmax(output, dim=1)
                     total_samples += target.size(0)
                     class_correct += (predicted == target).sum().item()
-
-                average_loss = total_loss / len(self.val_loader)
+                
+                all_predictions.extend(predicted.cpu().numpy())
+                all_targets.extend(target.cpu().numpy())
 
                 # Print progress
                 if batch_id % 100 == 0:
@@ -190,12 +200,23 @@ class CBMTrainer:
                     if phase == 0:
                         vector_acc = 100. * vector_correct / total_samples if total_samples > 0 else 0
                         concept_acc = 100. * concept_correct / concept_total if concept_total > 0 else 0
-                        print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Average Loss = {average_loss:.4f} | Vector Acc: {vector_acc:.4f}% | Per-Concept Acc: {concept_acc:.4f}%")
+                        print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Vector Acc: {vector_acc:.4f}% | Per-Concept Acc: {concept_acc:.4f}%")
                     else:
                         train_acc = 100. * class_correct / total_samples
                         print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.4f}%")
-        return
-    
+        
+        precision, recall, f1 = self.calculate_metrics(np.array(all_predictions), np.array(all_targets))
+        print(f"Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f}")
+
+        average_loss = total_loss / len(self.val_loader)
+        return average_loss if average_loss > 0 else 0
+
+    def calculate_metrics(self, predicted, target):
+        precision = precision_score(target, predicted, average="macro")
+        recall = recall_score(target, predicted, average="macro")
+        f1 = f1_score(target, predicted, average="macro")
+        return precision, recall, f1
+
 if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../../data/GTSRB/Final_Training/Images/"
