@@ -1,4 +1,4 @@
-from Data import ImageDataset
+from Data.Data import ImageDataset
 from torch.utils.data import DataLoader
 
 def main():

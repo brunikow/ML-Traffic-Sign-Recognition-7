@@ -1,0 +1,64 @@
+from torch.utils.data import DataLoader, random_split
+<<<<<<< HEAD:src/DataLoader.py
+<<<<<<< Updated upstream:src/DataLoader.py
+from Data import ImageDataset
+=======
+from Data.Data import ImageDataset
+from Data.Data2 import ImageDataset2
+>>>>>>> Stashed changes:src/Data/DataLoader.py
+=======
+from Data.Data import ImageDataset
+>>>>>>> b75e9556c1b7dbbae0daa3cd2eda83f3d85fc532:src/Data/DataLoader.py
+
+class ImageDataLoader:
+<<<<<<< Updated upstream:src/DataLoader.py
+    def __init__(self, image_path, csv_path, pixelsx, pixelsy, batch_size, train_portion):
+=======
+    """
+    Initiates an instance of a Dataloader.
+
+    @param image_path: Gives location of image data.
+    @param csv_path: Gives location of csv file, which contains concept vectors.
+    @param pixelsx: gives number of pixels in x dimension.
+    @param pixelsy: gives numbre of pixels in y dimension.
+    @param batch_size: gives batch size.
+    @param train_portion: gives distribution of data into training and validation data.
+    @param is_own_model: tells which dataset to use (dataset for own model or for pre trained model)
+    """
+    def __init__(self, image_path: str, csv_path: str, pixelsx: int, pixelsy: int, batch_size: int, train_portion: float, is_own_model: bool):
+>>>>>>> Stashed changes:src/Data/DataLoader.py
+
+        # create Dataset
+        if (is_own_model):
+            self.dataset = ImageDataset2(image_path, csv_path, pixelsx, pixelsy)
+        else:
+            self.dataset = ImageDataset(image_path, csv_path, pixelsx, pixelsy)
+        self.batch_size = batch_size
+        self.train_portion = train_portion
+        
+        # Split dataset
+        train_size = int(self.dataset.__len__() * self.train_portion)
+        val_size = self.dataset.__len__() - train_size
+
+        # use of random maybe, need to use a seed for reproducability
+        self.train_dataset, self.val_dataset = random_split(self.dataset, [train_size, val_size])
+
+    def get_train_loader(self):
+        train_loader = DataLoader(self.train_dataset, 
+                                  batch_size=self.batch_size, 
+                                  shuffle=True, 
+                                  num_workers=4)
+        return train_loader
+
+    
+    def get_val_loader(self):
+        val_loader = DataLoader(self.val_dataset, 
+                                  batch_size=self.batch_size, 
+                                  shuffle=False, 
+                                  num_workers=4)
+        return val_loader
+
+
+
+
+        
