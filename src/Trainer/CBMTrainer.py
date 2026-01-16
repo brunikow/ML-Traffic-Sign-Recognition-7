@@ -69,8 +69,8 @@ class CBMTrainer:
     """
     def main(self):
         start = time.time()
-        self.concept_training(8)
-        self.label_training(8)
+        self.concept_training(1)
+        self.label_training(1)
         end = time.time()
         total_time = end-start
         print(total_time)
@@ -209,15 +209,19 @@ if __name__ == "__main__":
     image_path = "../../data/GTSRB/Final_Training/Images/"
     csv_path = "../../data/concepts_per_class.csv"
     destination_path = "../../models/cnn/model1.pth"
+    is_own_model = True
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
                              batch_size=32,
                              train_portion=0.8,
-                             is_own_model=True)
+                             is_own_model=is_own_model)
     train_loader = loader.get_train_loader()
     val_loader = loader.get_val_loader()
-    cnn_model = SimpleModel1(43).to(device)
+    if (is_own_model):
+        cnn_model = SimpleModel1(43).to(device)
+    else:
+        cnn_model = Model_CNN(43).to(device)
     concept_model = Model(43, 43).to(device)
     model = CBMModel(cnn_model, concept_model).to(device)
     trainer = CBMTrainer(device, model, train_loader, val_loader)

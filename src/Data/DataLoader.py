@@ -1,19 +1,8 @@
 from torch.utils.data import DataLoader, random_split
-<<<<<<< HEAD:src/DataLoader.py
-<<<<<<< Updated upstream:src/DataLoader.py
-from Data import ImageDataset
-=======
 from Data.Data import ImageDataset
 from Data.Data2 import ImageDataset2
->>>>>>> Stashed changes:src/Data/DataLoader.py
-=======
-from Data.Data import ImageDataset
->>>>>>> b75e9556c1b7dbbae0daa3cd2eda83f3d85fc532:src/Data/DataLoader.py
 
 class ImageDataLoader:
-<<<<<<< Updated upstream:src/DataLoader.py
-    def __init__(self, image_path, csv_path, pixelsx, pixelsy, batch_size, train_portion):
-=======
     """
     Initiates an instance of a Dataloader.
 
@@ -26,8 +15,6 @@ class ImageDataLoader:
     @param is_own_model: tells which dataset to use (dataset for own model or for pre trained model)
     """
     def __init__(self, image_path: str, csv_path: str, pixelsx: int, pixelsy: int, batch_size: int, train_portion: float, is_own_model: bool):
->>>>>>> Stashed changes:src/Data/DataLoader.py
-
         # create Dataset
         if (is_own_model):
             self.dataset = ImageDataset2(image_path, csv_path, pixelsx, pixelsy)
