@@ -77,7 +77,7 @@ class CBMTrainer:
             
             if epochs_no_improv >= self.patience:
                 print(f"Early stopping {epoch+1}")
-                return
+                break
 
 
             # Calculate epoch statistics TODO
