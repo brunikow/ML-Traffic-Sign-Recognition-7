@@ -1,11 +1,25 @@
 from torch.utils.data import DataLoader, random_split
 from Data.Data import ImageDataset
+from Data.Data2 import ImageDataset2
 
 class ImageDataLoader:
-    def __init__(self, image_path, csv_path, pixelsx, pixelsy, batch_size, train_portion):
+    """
+    Initiates an instance of a Dataloader.
 
+    @param image_path: Gives location of image data.
+    @param csv_path: Gives location of csv file, which contains concept vectors.
+    @param pixelsx: gives number of pixels in x dimension.
+    @param pixelsy: gives numbre of pixels in y dimension.
+    @param batch_size: gives batch size.
+    @param train_portion: gives distribution of data into training and validation data.
+    @param is_own_model: tells which dataset to use (dataset for own model or for pre trained model)
+    """
+    def __init__(self, image_path: str, csv_path: str, pixelsx: int, pixelsy: int, batch_size: int, train_portion: float, is_own_model: bool):
         # create Dataset
-        self.dataset = ImageDataset(image_path, csv_path, pixelsx, pixelsy)
+        if (is_own_model):
+            self.dataset = ImageDataset2(image_path, csv_path, pixelsx, pixelsy)
+        else:
+            self.dataset = ImageDataset(image_path, csv_path, pixelsx, pixelsy)
         self.batch_size = batch_size
         self.train_portion = train_portion
         
