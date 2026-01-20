@@ -7,6 +7,7 @@ import time
 import sys
 from torch.utils.data import DataLoader
 from typing import List, Tuple
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 sys.path.append("..")
 
@@ -15,12 +16,13 @@ from Data.DataLoader import ImageDataLoader
 from Models.CBMModel import CBMModel
 from Models.Model import Model_CNN
 from Models.Model2 import Model
+from Models.SimpleModel1 import SimpleModel1
 
 """
 Class that manages the training and validation of the CBM Model
 """
 class CBMTrainer:
-    def __init__(self, device, model, train_loader, val_loader):
+    def __init__(self, device, model, train_loader, val_loader, patience):
         self.device = device
         self.model = model
 
@@ -64,8 +66,8 @@ class CBMTrainer:
     """
     def main(self):
         start = time.time()
-        self.concept_training(1)
-        self.label_training(1)
+        self.concept_training(15)
+        self.label_training(15)
         end = time.time()
         total_time = end-start
         print(total_time)
@@ -252,6 +254,7 @@ class CBMTrainer:
     """
     Function to calculate precision, recall and f1 of our first stage model using the predefined
     functions from the sklearn library
+
     @param predicted: targets the model has predicted
     @param target: actual value for each label
     """
@@ -283,7 +286,7 @@ if __name__ == "__main__":
         cnn_model = Model_CNN(43).to(device)
     concept_model = Model(43, 43).to(device)
     model = CBMModel(cnn_model, concept_model).to(device)
-    trainer = CBMTrainer(device, model, train_loader, val_loader)
+    trainer = CBMTrainer(device, model, train_loader, val_loader, 4)
     trainer.main()
     #torch.save(trained_model.state_dict(), destination_path)
     
