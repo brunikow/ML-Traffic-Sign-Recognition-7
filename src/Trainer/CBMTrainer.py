@@ -5,6 +5,7 @@ import numpy as np
 import copy
 import time
 import sys
+from typing import List, Tuple
 
 sys.path.append("..")
 
@@ -32,7 +33,6 @@ class CBMTrainer:
         ]
 
         #early stopping
-
         self.patience = patience
 
 
@@ -65,6 +65,8 @@ class CBMTrainer:
             print(f"\n Epoch {epoch + 1}/{num_epochs}")
 
             self.training(0)
+            #getting the average validation loss of the model to then look for the amount of improvement if any
+            # if we dont improve for baseline 3 epochs, then we continue to break and assume the model is already good the way it is
             avg_val_loss = self.validation(0)
             ##IMPORTANT EARLY STOPPING FUNCTION
 
@@ -211,7 +213,14 @@ class CBMTrainer:
         average_loss = total_loss / len(self.val_loader)
         return average_loss if average_loss > 0 else 0
 
-    def calculate_metrics(self, predicted, target):
+    """
+    Function to calculate precision, recall and f1 of our first stage model using the predefined
+    functions from the sklearn library
+    @param predicted: targets the model has predicted
+    @param target: actual value for each label
+    """
+    def calculate_metrics(self, predicted: List[int], target: List[int]) -> Tuple[float, float, float]:
+        #using macro averaging: compute metrics for each class and take their unweighted mean
         precision = precision_score(target, predicted, average="macro")
         recall = recall_score(target, predicted, average="macro")
         f1 = f1_score(target, predicted, average="macro")
