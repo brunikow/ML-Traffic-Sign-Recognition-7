@@ -5,11 +5,8 @@ import numpy as np
 import copy
 import time
 import sys
-<<<<<<< HEAD
-from typing import List, Tuple
-=======
 from torch.utils.data import DataLoader
->>>>>>> 1fdb1107917be6b452b45244e8c8d32a00e50f1c
+from typing import List, Tuple
 
 sys.path.append("..")
 
@@ -18,29 +15,12 @@ from Data.DataLoader import ImageDataLoader
 from Models.CBMModel import CBMModel
 from Models.Model import Model_CNN
 from Models.Model2 import Model
-<<<<<<< HEAD
-from sklearn.metrics import precision_score, recall_score, f1_score
-=======
-from Models.SimpleModel1 import SimpleModel1
->>>>>>> 1fdb1107917be6b452b45244e8c8d32a00e50f1c
 
 """
 Class that manages the training and validation of the CBM Model
 """
 class CBMTrainer:
-<<<<<<< HEAD
-    def __init__(self, device, model, train_loader, val_loader, patience = 3):
-=======
-    """
-    Initiates an instance of the trainer and defines loss functions and optimizers.
-
-    @param device: cuda device for faster calculation
-    @param model : cbm model we want to train
-    @param train_loader: dataloader for training
-    @param val_loader: dataloader for validation
-    """
-    def __init__(self, device: torch.device, model: nn.Module, train_loader: DataLoader, val_loader: DataLoader) -> None:
->>>>>>> 1fdb1107917be6b452b45244e8c8d32a00e50f1c
+    def __init__(self, device, model, train_loader, val_loader):
         self.device = device
         self.model = model
 
@@ -57,15 +37,11 @@ class CBMTrainer:
             optim.Adam(self.model.concept.parameters(), lr=0.0005)
         ]
 
-<<<<<<< HEAD
         #early stopping
         self.patience = patience
 
-=======
     """
     Freezes parameters of a given submodel.
->>>>>>> 1fdb1107917be6b452b45244e8c8d32a00e50f1c
-
     @param model: model you want to freeze.
     """
     def freeze(self, model: nn.Module) -> None:
@@ -213,19 +189,9 @@ class CBMTrainer:
                     train_acc = 100. * class_correct / total_samples
                     print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.4f}%")
         return
-<<<<<<< HEAD
-    
-    def validation(self, phase):
-=======
             
 
-    """
-    Validation function, that works for both concept and label validation.
-    
-    @param phase: concept validation needs phase 0 and label validation needs phase 1
-    """
-    def validation(self, phase: int) -> None:
->>>>>>> 1fdb1107917be6b452b45244e8c8d32a00e50f1c
+    def validation(self, phase):
         print("VALIDATE")
         self.model.eval()
 
