@@ -22,7 +22,7 @@ from Models.SimpleModel1 import SimpleModel1
 Class that manages the training and validation of the CBM Model
 """
 class CBMTrainer:
-    def __init__(self, device, model, train_loader, val_loader, patience):
+    def __init__(self, device, model, train_loader, val_loader, patience, learning_rate, c_epochs: int, l_epochs: int):
         self.device = device
         self.model = model
 
@@ -35,12 +35,15 @@ class CBMTrainer:
 
         # optimizer
         self.optimizer = [
-            optim.Adam(self.model.cnn.parameters(), lr=0.0005),
-            optim.Adam(self.model.concept.parameters(), lr=0.0005)
+            optim.Adam(self.model.cnn.parameters(), lr=learning_rate),
+            optim.Adam(self.model.concept.parameters(), lr=learning_rate)
         ]
 
         #early stopping
         self.patience = patience
+
+        self.c_epochs = c_epochs
+        self.l_epochs = l_epochs
 
     """
     Freezes parameters of a given submodel.
@@ -66,11 +69,13 @@ class CBMTrainer:
     """
     def main(self):
         start = time.time()
-        self.concept_training(15)
-        self.label_training(15)
+        self.concept_training(self.c_epochs)
+        self.label_training(self.l_epochs)
         end = time.time()
         total_time = end-start
         print(total_time)
+
+        return self.model
 
     
     """
@@ -286,7 +291,7 @@ if __name__ == "__main__":
         cnn_model = Model_CNN(43).to(device)
     concept_model = Model(43, 43).to(device)
     model = CBMModel(cnn_model, concept_model).to(device)
-    trainer = CBMTrainer(device, model, train_loader, val_loader, 4)
+    trainer = CBMTrainer(device, model, train_loader, val_loader, 4, 0.005, 10, 10)
     trainer.main()
     #torch.save(trained_model.state_dict(), destination_path)
     
