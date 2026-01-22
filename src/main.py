@@ -9,7 +9,15 @@ from Models.SimpleModel1 import SimpleModel1
 from Models.CBMModel import CBMModel
 from Trainer.CBMTrainer import CBMTrainer
 
+"""
+This class is the entry point of our program. It gives an easier access for the user to tune parameters.
+"""
+
 class Main:
+    """
+    Initiates a main object. takes all needed information and saves them.
+    """
+    
     def __init__(self, device: str, is_own_model: bool, batch_size: int, learning_rate: float, train_portion: int, c_epochs: int, l_epochs: int, patience: int):
         self.image_path = "../data/GTSRB/Final_Training/Images/"
         self.csv_path = "../data/concepts_per_class.csv"
@@ -24,6 +32,10 @@ class Main:
 
         self.model = CBMModel
 
+
+    """
+    Entry point of the Main class. Initiates all needed objects like device, loader, models and trainer. Than it starts the training process.
+    """
     def main(self):
         device = torch.device(self.device if torch.cuda.is_available() else "cpu")
         loader = ImageDataLoader(image_path=self.image_path,
@@ -51,11 +63,21 @@ class Main:
         return
 
 
+    """
+    Safes the model at a given destination.
+
+    @param destination_path: Location of the model file.
+    """
     def safe_model(self, destination_path):
         torch.save(self.model.state_dict(), destination_path)
         return
 
 
+    """
+    Safes meta data like learning rate and batch_size for a trained model.
+
+    @param destination_path: Location of the meta data file.
+    """
     def safe_meta_data(self, destination_path):
         with open(destination_path, "w") as file:
             file.write("# Metadata for " + destination_path + "\n\n")
@@ -83,7 +105,6 @@ if __name__ == "__main__":
                    l_epochs = 1, 
                    patience = 4
                    )
-
     starter.main()
 
     destination = "../models/cnn/modelx"
