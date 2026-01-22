@@ -151,7 +151,8 @@ if __name__ == "__main__":
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
                              batch_size=32,
-                             train_portion=0.8)
+                             train_portion=0.8,
+                             is_own_model=False)
     train_loader = loader.get_train_loader()
     val_loader = loader.get_val_loader()
     model = Model(43, 43)

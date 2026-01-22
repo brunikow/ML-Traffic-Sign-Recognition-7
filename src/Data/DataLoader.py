@@ -19,7 +19,7 @@ class ImageDataLoader:
     def __init__(self, image_path: str, csv_path: str, pixelsx: int, pixelsy: int, batch_size: int, train_portion: float, is_own_model: bool):
 
         #seed for reproducability
-        seed=42
+        #seed=42
 
         # create Dataset
         if (is_own_model):
@@ -33,9 +33,9 @@ class ImageDataLoader:
         train_size = int(self.dataset.__len__() * self.train_portion)
         val_size = self.dataset.__len__() - train_size
 
-        generator = torch.Generator().manual_seed(seed)
+        #generator = torch.Generator().manual_seed(seed)
         # use of random maybe, need to use a seed for reproducability
-        self.train_dataset, self.val_dataset = random_split(self.dataset, [train_size, val_size], generator=generator)
+        self.train_dataset, self.val_dataset = random_split(self.dataset, [train_size, val_size])
 
     def get_train_loader(self):
         train_loader = DataLoader(self.train_dataset, 

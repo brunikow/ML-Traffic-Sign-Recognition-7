@@ -6,6 +6,7 @@ from Models.Model import Model_CNN
 from Data.DataLoader import ImageDataLoader
 import copy
 import time
+from seeding import set_seed
 
 class Trainer:
     def __init__(self, device, model, train_loader, val_loader):
@@ -132,6 +133,8 @@ class Trainer:
 
 
 if __name__ == "__main__":
+    # set seed for reproducability
+    set_seed(42)
     # set up device
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../data/GTSRB/Final_Training/Images/"
@@ -141,7 +144,8 @@ if __name__ == "__main__":
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
                              batch_size=32,
-                             train_portion=0.8)
+                             train_portion=0.8,
+                             is_own_model=False)
     train_loader = loader.get_train_loader()
     val_loader = loader.get_val_loader()
     model = Model_CNN(43)

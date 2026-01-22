@@ -17,6 +17,7 @@ from Models.CBMModel import CBMModel
 from Models.Model import Model_CNN
 from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
+from seeding import set_seed
 
 """
 Class that manages the training and validation of the CBM Model
@@ -267,6 +268,9 @@ class CBMTrainer:
 
 
 if __name__ == "__main__":
+    # set seed for reproducability
+    set_seed(42)
+    # set up device
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../../data/GTSRB/Final_Training/Images/"
     csv_path = "../../data/concepts_per_class.csv"
