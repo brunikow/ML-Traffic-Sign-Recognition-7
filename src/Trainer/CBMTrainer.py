@@ -17,11 +17,8 @@ from Models.CBMModel import CBMModel
 from Models.Model import Model_CNN
 from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
-<<<<<<< HEAD
 from Analysis.DataCollector import DataCollector
-=======
-from seeding import set_seed
->>>>>>> dev_seed
+from Seeding import set_seed
 
 """
 Class that manages the training and validation of the CBM Model
@@ -120,8 +117,8 @@ class CBMTrainer:
 
             # Calculate epoch statistics TODO
 
-        self.vector_collector_training.save_df(f"./vector_collection_training_data_{}.csv")
-        self.vector_collector_validation.save_df(f"./vector_collection_validation_data_{}.csv")
+        self.vector_collector_training.save_df(f"./vector_collection_training_data_{int(time.time())}.csv")
+        self.vector_collector_validation.save_df(f"./vector_collection_validation_data_{int(time.time())}.csv")
         # Freezes first model
         self.unfreeze(self.model.concept)
     

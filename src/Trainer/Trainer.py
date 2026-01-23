@@ -6,7 +6,7 @@ from Models.Model import Model_CNN
 from Data.DataLoader import ImageDataLoader
 import copy
 import time
-from seeding import set_seed
+from Seeding import set_seed
 
 class Trainer:
     def __init__(self, device, model, train_loader, val_loader):
