@@ -17,6 +17,7 @@ from Models.CBMModel import CBMModel
 from Models.Model import Model_CNN
 from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
+from Analysis.DataCollector import DataCollector
 
 """
 Class that manages the training and validation of the CBM Model
@@ -38,6 +39,9 @@ class CBMTrainer:
             optim.Adam(self.model.cnn.parameters(), lr=learning_rate),
             optim.Adam(self.model.concept.parameters(), lr=learning_rate)
         ]
+
+        self.vector_collector_training = DataCollector(["epoch","loss", "vector_acc", "concept_acc"])
+        self.vector_collector_validation = DataCollector(["epoch","loss", "vector_acc", "concept_acc", "precision", "recall", "f1"])
 
         #early stopping
         self.patience = patience
@@ -102,17 +106,18 @@ class CBMTrainer:
             if avg_val_loss < best_value_loss:
                 best_value_loss = avg_val_loss
                 epochs_no_improv = 0
-                ##TODO: save model
+                torch.save(self.model.concept, f"../../models/concept/model_concept_{int(time.time())}.pth")
             else:
                 epochs_no_improv += 1
-            
             if epochs_no_improv >= self.patience:
-                print(f"Early stopping {epoch+1}")
+                print(f"Early stopping at epoch: {epoch+1}")
                 break
 
 
             # Calculate epoch statistics TODO
 
+        self.vector_collector_training.save_df(f"./vector_collection_training_data_{}.csv")
+        self.vector_collector_validation.save_df(f"./vector_collection_validation_data_{}.csv")
         # Freezes first model
         self.unfreeze(self.model.concept)
     
@@ -192,6 +197,7 @@ class CBMTrainer:
                     vector_acc = 100. * vector_correct / total_samples if total_samples > 0 else 0
                     concept_acc = 100. * concept_correct / concept_total if concept_total > 0 else 0
                     print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Vector Acc: {vector_acc:.4f}% | Per-Concept Acc: {concept_acc:.4f}%")
+                    self.vector_collector_training.collect([self.vector_collector_training.get_counter(), current_loss, vector_acc, concept_acc])
                 else:
                     train_acc = 100. * class_correct / total_samples
                     print(f"Training Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.4f}%")
@@ -205,6 +211,7 @@ class CBMTrainer:
         total_loss = 0.0
         total_samples, vector_correct, concept_correct, concept_total, class_correct = 0,0,0,0,0
         all_predictions, all_targets = [], []
+        vec_avg_acc, concept_avg_acc, loss_avg = [], [], []
 
         with torch.no_grad():
             for batch_id, (data, (vector, label)) in enumerate(self.val_loader):
@@ -246,12 +253,16 @@ class CBMTrainer:
                         vector_acc = 100. * vector_correct / total_samples if total_samples > 0 else 0
                         concept_acc = 100. * concept_correct / concept_total if concept_total > 0 else 0
                         print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Vector Acc: {vector_acc:.4f}% | Per-Concept Acc: {concept_acc:.4f}%")
+                        vec_avg_acc.append(vector_acc)
+                        concept_avg_acc.append(concept_acc)
+                        loss_avg.append(current_loss)
                     else:
                         train_acc = 100. * class_correct / total_samples
                         print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.4f}%")
         
         precision, recall, f1 = self.calculate_metrics(np.array(all_predictions), np.array(all_targets))
         print(f"Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f}")
+        self.vector_collector_validation.collect([self.vector_collector_validation.get_counter(), np.mean(loss_avg), np.mean(vec_avg_acc), np.mean(concept_avg_acc), precision, recall, f1])
 
         average_loss = total_loss / len(self.val_loader)
         return average_loss if average_loss > 0 else 0
@@ -291,7 +302,6 @@ if __name__ == "__main__":
         cnn_model = Model_CNN(43).to(device)
     concept_model = Model(43, 43).to(device)
     model = CBMModel(cnn_model, concept_model).to(device)
-    trainer = CBMTrainer(device, model, train_loader, val_loader, 4, 0.005, 10, 10)
+    trainer = CBMTrainer(device, model, train_loader, val_loader, 5, 0.005, 20, 10)
     trainer.main()
     #torch.save(trained_model.state_dict(), destination_path)
-    
