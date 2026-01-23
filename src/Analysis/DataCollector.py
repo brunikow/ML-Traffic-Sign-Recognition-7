@@ -33,4 +33,7 @@ class DataCollector:
     """
     def save_df(self, location: str) -> None:
         self.df.to_csv(location, index=False)
+
+    def get_counter(self) -> int:
+        return self.counter
     
