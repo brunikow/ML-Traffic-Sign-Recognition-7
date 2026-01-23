@@ -1,8 +1,9 @@
-from random import seed
+
 import torch
 from torch.utils.data import DataLoader, random_split
 from Data.Data import ImageDataset
 from Data.Data2 import ImageDataset2
+from seeding import seed_worker
 
 class ImageDataLoader:
     """
@@ -19,7 +20,7 @@ class ImageDataLoader:
     def __init__(self, image_path: str, csv_path: str, pixelsx: int, pixelsy: int, batch_size: int, train_portion: float, is_own_model: bool):
 
         #seed for reproducability
-        #seed=42
+        self.seed=42
 
         # create Dataset
         if (is_own_model):
@@ -33,15 +34,19 @@ class ImageDataLoader:
         train_size = int(self.dataset.__len__() * self.train_portion)
         val_size = self.dataset.__len__() - train_size
 
-        #generator = torch.Generator().manual_seed(seed)
-        # use of random maybe, need to use a seed for reproducability
-        self.train_dataset, self.val_dataset = random_split(self.dataset, [train_size, val_size])
+        # fix seed for splitting
+        split_generator = torch.Generator().manual_seed(self.seed)
+        self.train_dataset, self.val_dataset = random_split(self.dataset, [train_size, val_size], generator=split_generator)
 
     def get_train_loader(self):
+        loader_generator = torch.Generator()
+        loader_generator.manual_seed(self.seed)
         train_loader = DataLoader(self.train_dataset, 
                                   batch_size=self.batch_size, 
                                   shuffle=True, 
-                                  num_workers=4)
+                                  num_workers=4, 
+                                  worker_init_fn=seed_worker,
+                                  generator=loader_generator)
         return train_loader
 
     
@@ -49,7 +54,8 @@ class ImageDataLoader:
         val_loader = DataLoader(self.val_dataset, 
                                   batch_size=self.batch_size, 
                                   shuffle=False, 
-                                  num_workers=4)
+                                  num_workers=4,
+                                  worker_init_fn=seed_worker)
         return val_loader
 
 
