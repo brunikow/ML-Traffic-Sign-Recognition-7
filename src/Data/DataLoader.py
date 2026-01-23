@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader, random_split
 from Data.Data import ImageDataset
 from Data.Data2 import ImageDataset2
-from seeding import seed_worker
+from Seeding import seed_worker
 
 class ImageDataLoader:
     """
