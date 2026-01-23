@@ -43,6 +43,8 @@ class ImageDataset(Dataset):
             folder_loc = os.path.join(image_path, f"{current_label:05d}")
 
             paths = glob.glob(os.path.join(folder_loc, "*.ppm"))
+            # sort to ensure reproducibility
+            paths.sort()
             for p in paths:
                 """
                 Maybe redundant because of self.transform = weights.transforms() and the logic in getitem
