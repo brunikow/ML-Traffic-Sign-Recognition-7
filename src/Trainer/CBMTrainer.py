@@ -290,7 +290,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../../data/GTSRB/Final_Training/Images/"
     csv_path = "../../data/concepts_per_class.csv"
-    destination_path = "../../models/cbmmodel/model1.pth"
+    destination_path = "../../models/cbmmodel/model.pth"
     is_own_model = True
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,

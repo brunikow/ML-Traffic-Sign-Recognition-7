@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.metrics import  confusion_matrix, classification_report, precision_recall_fscore_support
 import json
 import os
@@ -20,7 +22,7 @@ from Trainer.CBMTrainer import CBMTrainer
 from Models.Model import Model_CNN
 from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
-from Seeding import set_seed, seed_worker
+from Seeding import set_seed
 
 def evaluate_model(model, test_loader, device, threshold=0.5):
     """
@@ -82,10 +84,6 @@ def evaluate_model(model, test_loader, device, threshold=0.5):
             all_concepts.extend(concepts.cpu().numpy())
             all_pred_concepts.extend(pred_concepts.cpu().numpy())
             all_concept_probs.extend(c_probs.cpu().numpy())
-            
-            # Print progress
-            if (batch_idx + 1) % 50 == 0:
-                print(f"Processed {batch_idx + 1} batches ({total_samples} samples)")
     
     # Convert to numpy arrays
     all_labels = np.array(all_labels)
@@ -115,10 +113,10 @@ def evaluate_model(model, test_loader, device, threshold=0.5):
         zero_division=0
     )
     
-    # Create confusion matrix for labels
+    # Create confusion matrix for the labels
     conf_matrix = confusion_matrix(all_labels, all_pred_labels)
     
-    # Calculate per-concept accuracy for each concept
+    # Calculate per-concept accuracy for every concept
     per_concept_acc = []
     for i in range(all_concepts.shape[1]):
         concept_acc = (all_concepts[:, i] == all_pred_concepts[:, i]).mean()
@@ -135,10 +133,44 @@ def evaluate_model(model, test_loader, device, threshold=0.5):
         'label_recall': label_recall,
         'label_f1': label_f1,
         'total_samples': total_samples,
-        'per_concept_accuracy': per_concept_acc
+        'per_concept_accuracy': per_concept_acc,
+        'confusion_matrix': conf_matrix.tolist()
     }
     
     return metrics
+
+def plot_confusion_matrix(conf_matrix, class_names, save_path):
+    """
+    Plot and save confusion matrix.
+    """
+    plt.figure(figsize=(15, 12))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=class_names[:len(conf_matrix)], 
+                yticklabels=class_names[:len(conf_matrix)],
+                cbar=False)
+    plt.title('Confusion Matrix')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300)
+    plt.close()
+
+def plot_per_concept_accuracy(per_concept_acc, concept_names, save_path):
+    """
+    Plot per-concept accuracy.
+    """
+    plt.figure(figsize=(16, 6))
+    bars = plt.bar(range(len(per_concept_acc)), per_concept_acc)
+    plt.xticks(range(len(per_concept_acc)), concept_names, rotation=90, ha='right')
+    plt.xlabel('Concept')
+    plt.ylabel('Accuracy')
+    plt.title('Per-Concept Prediction Accuracy')
+    plt.ylim(0.98, 1.0) # start at 0.98 because of high accuracies
+    
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300)
+    plt.close()
 
 if __name__ == "__main__":
     # set seed for reproducability
@@ -149,7 +181,10 @@ if __name__ == "__main__":
     concept_csv = "../../data/concepts_per_class.csv"
     label_csv = "../../data/GTSRB/Final_Test_GT/GT-final_test.csv"
     model_path = "../../models/cbmmodel/model1.pth"
-    is_own_model = True
+    is_own_model = False
+    concept_df = pd.read_csv(concept_csv) 
+    concept_names = concept_df.columns[2:].tolist() # needed for plotting
+    # Loads the Testdata
     loader = TestDataLoader(image_path=image_path,
                              concept_csv=concept_csv,
                              label_csv=label_csv,
@@ -167,5 +202,28 @@ if __name__ == "__main__":
     state_dict = torch.load(model_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict)
     metrics = evaluate_model(model, test_loader, device, threshold=0.5)
+    
     print("Evaluation Metrics:")
-    print(metrics)
+    print("label_accuracy:", metrics['label_accuracy'])
+    print("concept_vector_accuracy:", metrics['concept_vector_accuracy'])
+    print("concept_accuracy:", metrics['concept_accuracy'])
+    print("concept_precision:", metrics['concept_precision'])
+    print("concept_recall:", metrics['concept_recall'])
+    print("concept_f1:", metrics['concept_f1'])   
+    print("label_precision:", metrics['label_precision'])
+    print("label_recall:", metrics['label_recall'])
+    print("label_f1:", metrics['label_f1'])
+    print("Total samples evaluated:", metrics['total_samples'])
+    
+    conf_matrix = np.array(metrics['confusion_matrix'])
+    plot_confusion_matrix(
+        conf_matrix,
+        class_names=[str(i) for i in range(43)], 
+        save_path="test_visualisation/confusion_matrix.png"
+    )
+    
+    plot_per_concept_accuracy(
+        metrics['per_concept_accuracy'],
+        concept_names=concept_names,  # Pass the concept names
+        save_path="test_visualisation/per_concept_accuracy.png"
+    )
