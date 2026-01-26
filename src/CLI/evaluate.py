@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import  confusion_matrix, classification_report, precision_recall_fscore_support
 import json
 import os
 import sys
@@ -84,7 +84,7 @@ def evaluate_model(model, test_loader, device, threshold=0.5):
             all_concept_probs.extend(c_probs.cpu().numpy())
             
             # Print progress
-            if (batch_idx + 1) % 20 == 0:
+            if (batch_idx + 1) % 50 == 0:
                 print(f"Processed {batch_idx + 1} batches ({total_samples} samples)")
     
     # Convert to numpy arrays
@@ -135,9 +135,7 @@ def evaluate_model(model, test_loader, device, threshold=0.5):
         'label_recall': label_recall,
         'label_f1': label_f1,
         'total_samples': total_samples,
-        'confusion_matrix': conf_matrix.tolist(),
-        'per_concept_accuracy': per_concept_acc,
-        'class_report': classification_report(all_labels, all_pred_labels, output_dict=True)
+        'per_concept_accuracy': per_concept_acc
     }
     
     return metrics
@@ -150,8 +148,8 @@ if __name__ == "__main__":
     image_path = "../../data/GTSRB/Final_Test/Images/"
     concept_csv = "../../data/concepts_per_class.csv"
     label_csv = "../../data/GTSRB/Final_Test_GT/GT-final_test.csv"
-    model_path = "../../models/cnn/model1.pth"
-    is_own_model = False
+    model_path = "../../models/cbmmodel/model1.pth"
+    is_own_model = True
     loader = TestDataLoader(image_path=image_path,
                              concept_csv=concept_csv,
                              label_csv=label_csv,

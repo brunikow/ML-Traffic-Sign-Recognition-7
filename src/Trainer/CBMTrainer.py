@@ -306,6 +306,6 @@ if __name__ == "__main__":
         cnn_model = Model_CNN(43).to(device)
     concept_model = Model(43, 43).to(device)
     model = CBMModel(cnn_model, concept_model).to(device)
-    trainer = CBMTrainer(device, model, train_loader, val_loader, 5, 0.005, 10, 10)
+    trainer = CBMTrainer(device, model, train_loader, val_loader, 5, 0.005, 20, 10)
     trainer.main()
     torch.save(trainer.model.state_dict(), destination_path)
