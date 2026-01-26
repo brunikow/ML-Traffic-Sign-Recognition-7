@@ -15,7 +15,7 @@ class ImageDataset(Dataset):
         """
         Initializes a dataset out of given data by.
 
-        1. reading a csv file with lables and vectors.
+        1. reading a csv file with labels and vectors.
         2. going through the data, which is structured in a folder structure.
 
         @param image_path: path to the directory which contains all directories that store images.
@@ -34,7 +34,7 @@ class ImageDataset(Dataset):
         self.string_labels = []
         self.vectors = []
 
-        # Read csv file and extract names and vectors
+        # Read csv file and extract class names and vectors
         df = pd.read_csv(csv_path, skiprows=0)
         self.string_labels = df.iloc[:, 1].to_numpy()
         self.vectors = df.iloc[:, 2:].to_numpy()
@@ -108,9 +108,9 @@ if __name__ == "__main__":
     Test script that is only executed when this script is executed. Not during imports.
     """
 
-    folderpath = "../data/GTSRB/Final_Training/Images/"
+    folderpath = "../../data/GTSRB/Final_Training/Images/"
 
-    filepath = "../data/concepts_per_class.csv"
+    filepath = "../../data/concepts_per_class.csv"
 
     dataset = ImageDataset(folderpath, filepath, 128, 128)
 
