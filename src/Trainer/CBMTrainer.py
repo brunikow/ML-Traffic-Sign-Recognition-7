@@ -290,7 +290,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     image_path = "../../data/GTSRB/Final_Training/Images/"
     csv_path = "../../data/concepts_per_class.csv"
-    destination_path = "../../models/cnn/model1.pth"
+    destination_path = "../../models/cbmmodel/model1.pth"
     is_own_model = True
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
@@ -306,6 +306,6 @@ if __name__ == "__main__":
         cnn_model = Model_CNN(43).to(device)
     concept_model = Model(43, 43).to(device)
     model = CBMModel(cnn_model, concept_model).to(device)
-    trainer = CBMTrainer(device, model, train_loader, val_loader, 5, 0.005, 20, 10)
+    trainer = CBMTrainer(device, model, train_loader, val_loader, 5, 0.005, 10, 10)
     trainer.main()
-    #torch.save(trained_model.state_dict(), destination_path)
+    torch.save(trainer.model.state_dict(), destination_path)

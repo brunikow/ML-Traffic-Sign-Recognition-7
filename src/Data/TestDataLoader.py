@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")  # to allow imports from overarching directory
 import torch
 from torch.utils.data import DataLoader
-from TestData import TestDataset
+from Data.TestData import TestDataset
 from Seeding import seed_worker
 
 class TestDataLoader:
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     label_csv = "../../data/GTSRB/Final_Test_GT/GT-final_test.csv"
     concept_csv = "../../data/concepts_per_class.csv"
 
-    test_loader = TestDataLoader(folderpath, concept_csv, label_csv, 128, 128, 32, False)
+    test_loader = TestDataLoader(folderpath, concept_csv, label_csv, 128, 128, 32, True)
     loader = test_loader.get_test_loader()
     sample = next(iter(loader))
     images, (vectors, labels) = sample
