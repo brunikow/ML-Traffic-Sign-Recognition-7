@@ -5,6 +5,8 @@ import numpy as np
 import copy
 import time
 import sys
+import os
+
 from torch.utils.data import DataLoader
 from typing import List, Tuple
 from sklearn.metrics import precision_score, recall_score, f1_score
@@ -49,6 +51,8 @@ class CBMTrainer:
 
         self.c_epochs = c_epochs
         self.l_epochs = l_epochs
+
+        os.makedirs("../data/run_data", exist_ok=True)
 
     """
     Freezes parameters of a given submodel.
@@ -107,18 +111,15 @@ class CBMTrainer:
             if avg_val_loss < best_value_loss:
                 best_value_loss = avg_val_loss
                 epochs_no_improv = 0
-                torch.save(self.model.concept, f"../../models/concept/model_concept_{int(time.time())}.pth")
+                torch.save(self.model.concept, f"../models/concept/model.pth")
             else:
                 epochs_no_improv += 1
             if epochs_no_improv >= self.patience:
                 print(f"Early stopping at epoch: {epoch+1}")
                 break
 
-
-            # Calculate epoch statistics TODO
-
-        self.vector_collector_training.save_df(f"./vector_collection_training_data_{int(time.time())}.csv")
-        self.vector_collector_validation.save_df(f"./vector_collection_validation_data_{int(time.time())}.csv")
+        self.vector_collector_training.save_df(f"../data/run_data/training_data.csv")
+        self.vector_collector_validation.save_df(f"../data/run_data/validation_data.csv")
         # Freezes first model
         self.unfreeze(self.model.concept)
     
@@ -247,16 +248,17 @@ class CBMTrainer:
                 all_predictions.extend(predicted.cpu().numpy())
                 all_targets.extend(target.cpu().numpy())
 
+                current_loss = total_loss / (batch_id + 1)
+                vector_acc = 100. * vector_correct / total_samples if total_samples > 0 else 0
+                concept_acc = 100. * concept_correct / concept_total if concept_total > 0 else 0
+                vec_avg_acc.append(vector_acc)
+                concept_avg_acc.append(concept_acc)
+                loss_avg.append(current_loss)
+
                 # Print progress
                 if batch_id % 100 == 0:
-                    current_loss = total_loss / (batch_id + 1)
                     if phase == 0:
-                        vector_acc = 100. * vector_correct / total_samples if total_samples > 0 else 0
-                        concept_acc = 100. * concept_correct / concept_total if concept_total > 0 else 0
                         print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Vector Acc: {vector_acc:.4f}% | Per-Concept Acc: {concept_acc:.4f}%")
-                        vec_avg_acc.append(vector_acc)
-                        concept_avg_acc.append(concept_acc)
-                        loss_avg.append(current_loss)
                     else:
                         train_acc = 100. * class_correct / total_samples
                         print(f"Validation Batch {batch_id:3d}: Loss = {current_loss:.4f} | Acc: {train_acc:.4f}%")
@@ -277,9 +279,9 @@ class CBMTrainer:
     """
     def calculate_metrics(self, predicted: List[int], target: List[int]) -> Tuple[float, float, float]:
         #using macro averaging: compute metrics for each class and take their unweighted mean
-        precision = precision_score(target, predicted, average="macro")
-        recall = recall_score(target, predicted, average="macro")
-        f1 = f1_score(target, predicted, average="macro")
+        precision = precision_score(target, predicted, average="macro", zero_division=0)
+        recall = recall_score(target, predicted, average="macro", zero_division=0)
+        f1 = f1_score(target, predicted, average="macro", zero_division=0)
         return precision, recall, f1
 
 
@@ -287,7 +289,7 @@ if __name__ == "__main__":
     # set seed for reproducability
     set_seed(42)
     # set up device
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     image_path = "../../data/GTSRB/Final_Training/Images/"
     csv_path = "../../data/concepts_per_class.csv"
     destination_path = "../../models/cbmmodel/model.pth"
@@ -295,7 +297,7 @@ if __name__ == "__main__":
     loader = ImageDataLoader(image_path=image_path,
                              csv_path=csv_path,
                              pixelsx=128, pixelsy=128,
-                             batch_size=32,
+                             batch_size=16,
                              train_portion=0.8,
                              is_own_model=is_own_model)
     train_loader = loader.get_train_loader()

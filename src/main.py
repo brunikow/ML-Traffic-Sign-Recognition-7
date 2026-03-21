@@ -93,21 +93,42 @@ class Main:
 
         return
 
+def init_download(file):
+    print(f"Downloading {file} from the GTSRB")
+    url = f"https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/{file}.zip"
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(f"../data/{file}", 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        os.makedirs(f"../data/GTSRB/{file}", exist_ok=True)
+        with zipfile.ZipFile(f"../data/{file}", 'r') as f:
+            f.extractall(f"../data/GTSRB/{file}/")
+
+        os.remove(f"../data/{file}")
 
 if __name__ == "__main__":
     # set your configuration here!!!
-    starter = Main(device = "cuda:1", 
-                   is_own_model = True, 
-                   batch_size = 32, 
-                   learning_rate = 0.005, 
-                   train_portion = 0.8, 
-                   c_epochs = 1, 
-                   l_epochs = 1, 
-                   patience = 4
-                   )
-    starter.main()
 
-    destination = "../models/cnn/modelx"
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "init":
+            init_download("GTSRB_Final_Training_Images")
+            init_download("GTSRB_Final_Test_Images")
+            init_download("GTSRB_Final_Test_GT")
 
-    starter.safe_model(destination + ".pth")
-    starter.safe_meta_data(destination + ".md")
+        elif sys.argv[1] == "run":
+            starter = Main(device = "cuda:1", 
+                        is_own_model = True, 
+                        batch_size = 32, 
+                        learning_rate = 0.005, 
+                        train_portion = 0.8, 
+                        c_epochs = 25, 
+                        l_epochs = 15, 
+                        patience = 4
+                        )
+            starter.main()
+            destination = "../models/cnn/modelx"
+            starter.safe_model(destination + ".pth")
+            starter.safe_meta_data(destination + ".md")
