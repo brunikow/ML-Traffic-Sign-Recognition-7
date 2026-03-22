@@ -87,7 +87,6 @@ class CBMTrainer:
         end = time.time()
         total_time = end-start
         minutes, seconds = divmod(end - start, 60)
-
         print(f"Training took {int(minutes)}m {seconds:.2f}s")
 
         return self.model

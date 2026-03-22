@@ -4,7 +4,6 @@ import requests
 import zipfile
 import os
 import time
-
 from pathlib import Path
 
 from torch.utils.data import DataLoader
@@ -16,7 +15,7 @@ from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
 from Models.CBMModel import CBMModel
 from Trainer.CBMTrainer import CBMTrainer
-from CLI.evaluate import eval
+from CLI.Evaluate import eval
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
