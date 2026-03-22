@@ -1,7 +1,7 @@
-# Traffic Sign Recognition – Getting Started
+# Getting Started
 
 This project trains a traffic sign recognition model using the GTSRB dataset.
-Created for our Semesterproject at the Humboldt University Berlin.
+Created for our semester project at the Humboldt University Berlin.
 
 ---
 
@@ -10,7 +10,6 @@ Created for our Semesterproject at the Humboldt University Berlin.
 Download and install **Anaconda** or **Miniconda**:
 
 [https://www.anaconda.com/download](https://www.anaconda.com/download)
-
 ---
 
 ## 2️. Set up project environment
@@ -45,7 +44,6 @@ After running this command following folders will appear in your file structure:
 ## 4. Train the model
 ```
 python src/main.py run
-
 ```
 This command can be followed by the following configs:
 ```
@@ -55,10 +53,27 @@ own_model: runs our model instead of the EfficientNetV2
 
 This will:
 
--   Train the CNN
--   Evaluate performance per batch
--   Compute precision, recall, and F1 scores
+- Train the CNN
+- Evaluate performance per batch
+- Compute precision, recall, and F1 scores
 
 ---
 
 ## 5. Evaluate the model
+```
+python src/main.py eval
+```
+
+This will:
+
+- Load the test dataset and trained model.
+- Evaluate the model and compute:
+- Label accuracy
+- Concept vector accuracy
+- Concept accuracy, precision, recall, F1
+
+Save visualizations:
+- Confusion matrix (confusion_matrix.png)
+- Per-concept accuracy (per_concept_accuracy.png)
+
+Metrics are printed to the console and saved plots are in src/CLI/test_visualisation/.

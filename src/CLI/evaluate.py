@@ -14,7 +14,13 @@ from sklearn.metrics import  confusion_matrix, classification_report, precision_
 import json
 import os
 import sys
-sys.path.append("..")  # to allow imports from overarching directory
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+DATA_DIR = BASE_DIR / "data"
+MODEL_DIR = BASE_DIR / "models"
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))  # to allow imports from overarching directory
+
 from Data.TestData import TestDataset
 from Data.TestDataLoader import TestDataLoader
 from Models.CBMModel import CBMModel 
@@ -172,16 +178,78 @@ def plot_per_concept_accuracy(per_concept_acc, concept_names, save_path):
     plt.savefig(save_path, dpi=300)
     plt.close()
 
+def eval():
+    """
+    Works as the main eval function being called from the main file
+    """
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    image_path = DATA_DIR / "GTSRB/GTSRB_Final_Test_Images/GTSRB/Final_Test/Images"
+    concept_csv = DATA_DIR / "concepts_per_class.csv"
+    label_csv =  DATA_DIR / "GTSRB/GTSRB_Final_Test_GT/GT-final_test.csv"
+
+    destination = Path(MODEL_DIR / "cbmmodel/final_model.pth")
+    is_own_model = False
+    if destination.exists():
+        is_own_model = True
+    else:
+        destination = (MODEL_DIR / "cbmmodel/final_model_ef.pth")
+    
+    concept_df = pd.read_csv(concept_csv) 
+    concept_names = concept_df.columns[2:].tolist() # needed for plotting
+    # Loads the Testdata
+    loader = TestDataLoader(image_path=image_path,
+                             concept_csv=concept_csv,
+                             label_csv=label_csv,
+                             pixelsx=128, pixelsy=128,
+                             batch_size=32,
+                             is_own_model=is_own_model)
+    test_loader = loader.get_test_loader()
+    # create model
+    if (is_own_model):
+        cnn_model = SimpleModel1(43).to(device)
+    else:
+        cnn_model = Model_CNN(43).to(device) # label model
+    concept_model = Model(43, 43).to(device)
+    model = CBMModel(cnn_model, concept_model).to(device)
+    state_dict = torch.load(destination, map_location=device, weights_only=True)
+    model.load_state_dict(state_dict)
+    metrics = evaluate_model(model, test_loader, device, threshold=0.5)
+    
+    print("Evaluation Metrics:")
+    print("label_accuracy:", metrics['label_accuracy'])
+    print("concept_vector_accuracy:", metrics['concept_vector_accuracy'])
+    print("concept_accuracy:", metrics['concept_accuracy'])
+    print("concept_precision:", metrics['concept_precision'])
+    print("concept_recall:", metrics['concept_recall'])
+    print("concept_f1:", metrics['concept_f1'])   
+    print("label_precision:", metrics['label_precision'])
+    print("label_recall:", metrics['label_recall'])
+    print("label_f1:", metrics['label_f1'])
+    print("Total samples evaluated:", metrics['total_samples'])
+    
+    conf_matrix = np.array(metrics['confusion_matrix'])
+    plot_confusion_matrix(
+        conf_matrix,
+        class_names=[str(i) for i in range(43)], 
+        save_path= BASE_DIR / "src/CLI/test_visualisation/confusion_matrix.png"
+    )
+    
+    plot_per_concept_accuracy(
+        metrics['per_concept_accuracy'],
+        concept_names=concept_names,  # Pass the concept names
+        save_path= BASE_DIR / "src/CLI/test_visualisation/per_concept_accuracy.png"
+    )
+
 if __name__ == "__main__":
     # set seed for reproducability
     set_seed(42)
     # set up device
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-    image_path = "../../data/GTSRB/Final_Test/Images/"
-    concept_csv = "../../data/concepts_per_class.csv"
-    label_csv = "../../data/GTSRB/Final_Test_GT/GT-final_test.csv"
-    model_path = "../../models/cbmmodel/model1.pth"
-    is_own_model = False
+    image_path = DATA_DIR / "GTSRB/GTSRB_Final_Test_Images/GTSRB/Final_Test/Images"
+    concept_csv = DATA_DIR / "concepts_per_class.csv"
+    label_csv =  DATA_DIR / "GTSRB/GTSRB_Final_Test_GT/GT-final_test.csv"
+    model_path = MODEL_DIR / "cbmmodel/final_model.pth"
+    is_own_model = True
     concept_df = pd.read_csv(concept_csv) 
     concept_names = concept_df.columns[2:].tolist() # needed for plotting
     # Loads the Testdata
@@ -219,11 +287,11 @@ if __name__ == "__main__":
     plot_confusion_matrix(
         conf_matrix,
         class_names=[str(i) for i in range(43)], 
-        save_path="test_visualisation/confusion_matrix.png"
+        save_path= BASE_DIR / "src/CLI/test_visualisation/confusion_matrix.png"
     )
     
     plot_per_concept_accuracy(
         metrics['per_concept_accuracy'],
         concept_names=concept_names,  # Pass the concept names
-        save_path="test_visualisation/per_concept_accuracy.png"
+        save_path= BASE_DIR / "src/CLI/test_visualisation/per_concept_accuracy.png"
     )

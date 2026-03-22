@@ -6,6 +6,7 @@ import copy
 import time
 import sys
 import os
+from pathlib import Path
 
 from torch.utils.data import DataLoader
 from typing import List, Tuple
@@ -21,6 +22,9 @@ from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
 from Analysis.DataCollector import DataCollector
 from Seeding import set_seed
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+DATA_DIR = BASE_DIR / "data"
 
 """
 Class that manages the training and validation of the CBM Model
@@ -52,7 +56,7 @@ class CBMTrainer:
         self.c_epochs = c_epochs
         self.l_epochs = l_epochs
 
-        os.makedirs("../data/run_data", exist_ok=True)
+        os.makedirs(DATA_DIR / "run_data", exist_ok=True)
 
     """
     Freezes parameters of a given submodel.
@@ -82,7 +86,9 @@ class CBMTrainer:
         self.label_training(self.l_epochs)
         end = time.time()
         total_time = end-start
-        print(total_time)
+        minutes, seconds = divmod(end - start, 60)
+
+        print(f"Training took {int(minutes)}m {seconds:.2f}s")
 
         return self.model
 
@@ -111,15 +117,15 @@ class CBMTrainer:
             if avg_val_loss < best_value_loss:
                 best_value_loss = avg_val_loss
                 epochs_no_improv = 0
-                torch.save(self.model.concept, f"../models/concept/model.pth")
+                torch.save(self.model.concept, BASE_DIR / "models" / "conceptmodel/model.pth")
             else:
                 epochs_no_improv += 1
             if epochs_no_improv >= self.patience:
                 print(f"Early stopping at epoch: {epoch+1}")
                 break
 
-        self.vector_collector_training.save_df(f"../data/run_data/training_data.csv")
-        self.vector_collector_validation.save_df(f"../data/run_data/validation_data.csv")
+        self.vector_collector_training.save_df(DATA_DIR / "run_data/training_data.csv")
+        self.vector_collector_validation.save_df(DATA_DIR / "run_data/validation_data.csv")
         # Freezes first model
         self.unfreeze(self.model.concept)
     

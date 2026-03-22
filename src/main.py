@@ -1,6 +1,14 @@
 import torch
-from torch.utils.data import DataLoader
+import sys
+import requests
+import zipfile
+import os
+import time
 
+from pathlib import Path
+
+from torch.utils.data import DataLoader
+from Seeding import set_seed
 from Data.Data import ImageDataset
 from Data.DataLoader import ImageDataLoader
 from Models.Model import Model_CNN
@@ -8,6 +16,11 @@ from Models.Model2 import Model
 from Models.SimpleModel1 import SimpleModel1
 from Models.CBMModel import CBMModel
 from Trainer.CBMTrainer import CBMTrainer
+from CLI.evaluate import eval
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+MODEL_DIR = BASE_DIR / "models"
 
 """
 This class is the entry point of our program. It gives an easier access for the user to tune parameters.
@@ -19,8 +32,8 @@ class Main:
     """
     
     def __init__(self, device: str, is_own_model: bool, batch_size: int, learning_rate: float, train_portion: int, c_epochs: int, l_epochs: int, patience: int):
-        self.image_path = "../data/GTSRB/Final_Training/Images/"
-        self.csv_path = "../data/concepts_per_class.csv"
+        self.image_path = DATA_DIR / "GTSRB/GTSRB_Final_Training_Images/GTSRB/Final_Training/Images"
+        self.csv_path = DATA_DIR / "concepts_per_class.csv"
         self.device = device
         self.is_own_model = is_own_model
         self.batch_size = batch_size
@@ -59,16 +72,14 @@ class Main:
         trainer = CBMTrainer(device, cbm_model, train_loader, val_loader, self.patience, self.learning_rate, self.c_epochs, self.l_epochs)
 
         self.model = trainer.main()
-
         return
-
 
     """
     Safes the model at a given destination.
 
     @param destination_path: Location of the model file.
     """
-    def safe_model(self, destination_path):
+    def save_model(self, destination_path):
         torch.save(self.model.state_dict(), destination_path)
         return
 
@@ -78,9 +89,9 @@ class Main:
 
     @param destination_path: Location of the meta data file.
     """
-    def safe_meta_data(self, destination_path):
+    def save_meta_data(self, destination_path):
         with open(destination_path, "w") as file:
-            file.write("# Metadata for " + destination_path + "\n\n")
+            file.write("# Metadata for " + str(destination_path) + "\n\n")
 
             file.write("- device: " + self.device + "\n")
             file.write("- model_variant: " + ("self written model" if (self.is_own_model) else "efficientNet model") + "\n")
@@ -93,42 +104,66 @@ class Main:
 
         return
 
+def init():
+    timer_start = time.time()
+    init_download("GTSRB_Final_Training_Images")
+    init_download("GTSRB_Final_Test_Images")
+    init_download("GTSRB_Final_Test_GT")
+    timer_end = time.time()
+
+    subdirs = ["cnnmodel", "cbmmodel", "conceptmodel"]
+    for subdir in subdirs:
+        os.makedirs(MODEL_DIR / subdir, exist_ok=True)
+
+    minutes, seconds = divmod(timer_end - timer_start, 60)
+
+    print(f"Initializing the project took {int(minutes)}m {seconds:.2f}s")
+
 def init_download(file):
     print(f"Downloading {file} from the GTSRB")
     url = f"https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/{file}.zip"
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        with open(f"../data/{file}", 'wb') as f:
+        with open(DATA_DIR / file, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
 
-        os.makedirs(f"../data/GTSRB/{file}", exist_ok=True)
-        with zipfile.ZipFile(f"../data/{file}", 'r') as f:
-            f.extractall(f"../data/GTSRB/{file}/")
+        os.makedirs(DATA_DIR / "GTSRB" / file, exist_ok=True)
+        with zipfile.ZipFile(DATA_DIR / file, 'r') as f:
+            f.extractall(DATA_DIR / "GTSRB" / file)
 
-        os.remove(f"../data/{file}")
+        os.remove(DATA_DIR / file)
 
 if __name__ == "__main__":
     # set your configuration here!!!
+    set_seed(42)
 
+    print(BASE_DIR)
     if len(sys.argv) > 1:
         if sys.argv[1] == "init":
-            init_download("GTSRB_Final_Training_Images")
-            init_download("GTSRB_Final_Test_Images")
-            init_download("GTSRB_Final_Test_GT")
+            init()
 
         elif sys.argv[1] == "run":
+            own_model = False
+            if len(sys.argv) > 2:
+                if sys.argv[2] == "own_model":
+                    print("Training is set without the EfficientNetV2 backbone")
+                    own_model = True
+
             starter = Main(device = "cuda:1", 
-                        is_own_model = True, 
+                        is_own_model = own_model, 
                         batch_size = 32, 
-                        learning_rate = 0.005, 
+                        learning_rate = 0.003, 
                         train_portion = 0.8, 
-                        c_epochs = 25, 
-                        l_epochs = 15, 
-                        patience = 4
+                        c_epochs = 40 if own_model else 20,
+                        l_epochs = 20, 
+                        patience = 5 if own_model else 3
                         )
             starter.main()
-            destination = "../models/cnn/modelx"
-            starter.safe_model(destination + ".pth")
-            starter.safe_meta_data(destination + ".md")
+            destination = MODEL_DIR / "cbmmodel/final_model" if own_model else "cbmmodel/final_model_ef"
+            starter.save_model(destination.with_suffix(".pth"))
+            starter.save_meta_data(destination.with_suffix(".md"))
+
+        elif sys.argv[1] == "eval":
+            eval()
