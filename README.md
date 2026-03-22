@@ -76,4 +76,4 @@ Save visualizations:
 - Confusion matrix (confusion_matrix.png)
 - Per-concept accuracy (per_concept_accuracy.png)
 
-Metrics are printed to the console and saved plots are in src/CLI/test_visualisation/.
+Metrics are printed to the console and saved plots are in `src/CLI/test_visualisation/`.
