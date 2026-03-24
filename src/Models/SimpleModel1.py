@@ -8,8 +8,6 @@ Model that takes concept vectors as input and gives back a label.
 class SimpleModel1(torch.nn.Module):
     """
     Initiates an instance of the model.
-
-
     @param num_concepts: takes length of concept vector
     @param num_labels: takes length of the output
     """

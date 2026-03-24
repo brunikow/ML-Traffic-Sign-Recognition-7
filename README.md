@@ -5,14 +5,22 @@ Created for our semester project at the Humboldt University Berlin.
 
 ---
 
-## 1️. Install Conda
+## 1. Clone the Repo
+
+```
+git clone https://github.com/brunikow/ML-Traffic-Sign-Recognition-7.git tsr-gr7
+```
+
+---
+
+## 2. Install Conda
 
 Download and install **Anaconda** or **Miniconda**:
 
 [https://www.anaconda.com/download](https://www.anaconda.com/download)
 ---
 
-## 2️. Set up project environment
+## 3. Set up project environment
 
 From the project root:
 
@@ -26,7 +34,7 @@ conda activate gr7-ml
 
 ---
 
-## 3. Initialize
+## 4. Initialize
 
 The project uses the **GTSRB dataset**. To properly train our Models we need to download the dataset:
 ```
@@ -41,7 +49,7 @@ After running this command following folders will appear in your file structure:
 
 --- 
 
-## 4. Train the model
+## 5. Train the model
 ```
 python src/main.py run
 ```
@@ -59,7 +67,7 @@ This will:
 
 ---
 
-## 5. Evaluate the model
+## 6. Evaluate the model
 ```
 python src/main.py eval
 ```

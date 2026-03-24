@@ -87,7 +87,9 @@ class CBMTrainer:
         end = time.time()
         total_time = end-start
         minutes, seconds = divmod(end - start, 60)
-        print(f"Training took {int(minutes)}m {seconds:.2f}s")
+        hours, minutes = divmod(minutes, 60)
+
+        print(f"Training took {int(minutes)}m {seconds:.2f}s") if hours < 1 else print(f"Training took {int(hours)}h {int(minutes)}m {seconds}s")
 
         return self.model
 
@@ -115,11 +117,11 @@ class CBMTrainer:
 
             if avg_val_loss < best_value_loss:
                 best_value_loss = avg_val_loss
-                epochs_no_improv = 0
-                torch.save(self.model.concept, BASE_DIR / "models" / "conceptmodel/model.pth")
+                epochs_no_improve = 0
+                torch.save(self.model.concept, BASE_DIR / "models" / "conceptmodel/concmodel.pth")
             else:
-                epochs_no_improv += 1
-            if epochs_no_improv >= self.patience:
+                epochs_no_improve += 1
+            if epochs_no_improve >= self.patience:
                 print(f"Early stopping at epoch: {epoch+1}")
                 break
 
@@ -137,14 +139,25 @@ class CBMTrainer:
     def label_training(self, num_epochs: int) -> None:
         # Freezes first model
         self.freeze(self.model.cnn)
+
+        best_value_loss = float('inf')
+        epochs_no_improv = 0
         
         for epoch in range(num_epochs):
             print(f"\n Epoch {epoch + 1}/{num_epochs}")
 
             self.training(1)
-            self.validation(1)
+            avg_val_loss = self.validation(1)
 
-            # Calculate epoch statistics TODO
+            if avg_val_loss < best_value_loss:
+                best_value_loss = avg_val_loss
+                epochs_no_improve = 0
+                torch.save(self.model.concept, BASE_DIR / "models" / "cnnmodel/cnnmodel.pth")
+            else:
+                epochs_no_improve += 1
+            if epochs_no_improve >= self.patience:
+                print(f"Early stopping at epoch: {epoch+1}")
+                break
 
         # Freezes second model
         self.unfreeze(self.model.cnn)

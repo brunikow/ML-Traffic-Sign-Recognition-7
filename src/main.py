@@ -150,17 +150,17 @@ if __name__ == "__main__":
                     print("Training is set without the EfficientNetV2 backbone")
                     own_model = True
 
-            starter = Main(device = "cuda:1", 
+            starter = Main(device = "cuda:0", 
                         is_own_model = own_model, 
                         batch_size = 32, 
-                        learning_rate = 0.003, 
+                        learning_rate = 0.002, 
                         train_portion = 0.8, 
                         c_epochs = 40 if own_model else 20,
                         l_epochs = 20, 
-                        patience = 5 if own_model else 3
+                        patience = 6 if own_model else 4
                         )
             starter.main()
-            destination = MODEL_DIR / "cbmmodel/final_model" if own_model else "cbmmodel/final_model_ef"
+            destination = MODEL_DIR / "cbmmodel/final_model" if own_model else MODEL_DIR / "cbmmodel/final_model_ef"
             starter.save_model(destination.with_suffix(".pth"))
             starter.save_meta_data(destination.with_suffix(".md"))
 

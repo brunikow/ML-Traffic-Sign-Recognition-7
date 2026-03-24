@@ -10,7 +10,6 @@ class Model_CNN(torch.nn.Module):
         # pretrained network
         self.backbone = efficientnet_v2_s(weights=EfficientNet_V2_S_Weights.IMAGENET1K_V1)
 
-        
         # output of the last layer
         in_features = self.backbone.classifier[1].in_features
         self.backbone.classifier = torch.nn.Identity()
