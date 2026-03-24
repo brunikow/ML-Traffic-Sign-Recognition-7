@@ -22,11 +22,13 @@ Download and install **Anaconda** or **Miniconda**:
 
 From the project root:
 
-```
 # Create the conda environment
+```
 conda env create -f config/env.yaml
+```
 
 # Activate the environment
+```
 conda activate gr7-ml
 ```
 
