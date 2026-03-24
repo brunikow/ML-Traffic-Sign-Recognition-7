@@ -213,6 +213,9 @@ data/processed/*
 data/splits/*
 !data/*.csv
 data/GTSRB/*
+data/run_data/*
 
 #.idea
 .idea/
+
+models/*
