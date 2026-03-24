@@ -27,7 +27,7 @@ From the project root:
 conda env create -f config/env.yaml
 ```
 
-# Activate the environment
+### Activate the environment
 ```
 conda activate gr7-ml
 ```
