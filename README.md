@@ -22,7 +22,7 @@ Download and install **Anaconda** or **Miniconda**:
 
 From the project root:
 
-# Create the conda environment
+### Create the conda environment
 ```
 conda env create -f config/env.yaml
 ```
